@@ -1,0 +1,21 @@
+# Environment variables — JANGAN commit!
+.env
+.env.local
+.env.production
+
+# Sudah tidak dipakai (diganti .env)
+env.js
+public/env.js
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Cloudflare
+.wrangler/
+
+# OS
+.DS_Store
+Thumbs.db

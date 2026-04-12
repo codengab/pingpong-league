@@ -1,0 +1,73 @@
+/* src/input.css
+   File ini di-process oleh Tailwind CLI.
+   Jalankan: npm run dev   (watch mode, auto rebuild saat ada perubahan)
+             npm run build (minified untuk production)
+   Output  : public/assets/tailwind.css
+*/
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Custom App Styles ───────────────────────────────────── */
+@layer base {
+  body {
+    font-family: 'Roboto', ui-sans-serif, system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  /* Tab navigation active state */
+  .tab-active {
+    @apply border-b-[3px] border-blue-600 text-blue-600 font-medium;
+  }
+  .dark .tab-active {
+    @apply border-blue-400 text-blue-400;
+  }
+
+  /* Stat cards di podium */
+  .stat-card {
+    @apply rounded-2xl p-4 text-center;
+  }
+  .stat-title {
+    @apply text-[11px] uppercase font-bold tracking-wide;
+  }
+  .stat-nama {
+    @apply text-lg font-black mt-1.5;
+  }
+  .stat-angka {
+    @apply text-sm mt-0.5;
+  }
+
+  /* Modal animation */
+  .modal-enter {
+    animation: modalIn 0.18s ease-out;
+  }
+
+  /* Hide scrollbar tapi tetap scrollable */
+  .hide-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scroll::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer utilities {
+  /* Realtime live dot pulse */
+  .live-dot {
+    animation: live-pulse 2s ease-in-out infinite;
+  }
+}
+
+/* ── Keyframes ───────────────────────────────────────────── */
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
