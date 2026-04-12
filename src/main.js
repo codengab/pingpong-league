@@ -11,6 +11,7 @@ import { generatePasangan, distribusiTanggal, toDbRows } from './lib/scheduleGen
 import { hitungKlasemen } from './lib/klasemenCalculator.js';
 import { renderKlasemen, renderJadwal, renderHasil, renderPodium, renderDetailPemain } from './components/renderer.js';
 import { store }          from './lib/appState.js';
+import { registerSW } from 'virtual:pwa-register';
 import './input.css';
 
 // ── Expose semua fungsi untuk onclick= di HTML ────────────────
@@ -860,3 +861,6 @@ async function submitRegisterAdmin() {
     btn.disabled = false; btn.textContent = 'Daftarkan';
   }
 }
+
+// Service Worker
+registerSW({ immediate: true });

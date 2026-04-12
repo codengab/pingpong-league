@@ -1,22 +1,65 @@
-// vite.config.js
 import { defineConfig } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
-  // Root adalah folder pingpong itu sendiri
-  root: '.',
-
-  // Output build ke folder dist/
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    minify: 'esbuild',
+    cssCodeSplit: true
   },
 
-  // Env vars: Vite baca dari .env secara otomatis
-  // VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY
-  // Di browser bisa diakses via import.meta.env.VITE_SUPABASE_URL
+  plugins: [
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'robots.txt'],
+      manifest: {
+        name: 'Liga Pingpong NIC',
+        short_name: 'Pingpong',
+        description: 'Aplikasi Liga Pingpong NIC',
+        theme_color: '#0f172a',
+        background_color: '#0f172a',
+        display: 'standalone',
+        start_url: '/',
 
-  server: {
-    port: 3000,
-    open: true,
-  },
+        icons: [
+          {
+            src: '/assets/icons/icon-192x192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: '/assets/icons/icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          },
+          {
+            src: '/assets/icons/icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
+          }
+        ],
+
+        screenshots: [
+          {
+            src: '/assets/screenshots/mobile.png',
+            sizes: '540x720',
+            type: 'image/png'
+            // 👉 mobile (tanpa form_factor)
+          },
+          {
+            src: '/assets/screenshots/desktop.png',
+            sizes: '1280x720',
+            type: 'image/png',
+            form_factor: 'wide' // 👉 desktop
+          }
+        ]
+      },
+
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,svg,ico}']
+      }
+    })
+  ]
 });

@@ -1,420 +1,549 @@
 <!DOCTYPE html>
 <html lang="id" class="">
+
 <head>
   <meta charset="UTF-8" />
+  <meta name="description" content="Aplikasi Liga Pingpong NIC untuk manajemen pertandingan, klasemen, dan jadwal." />
+  <meta name="keywords" content="pingpong, liga pingpong, tenis meja, klasemen pingpong" />
+  <meta name="author" content="NIC Pingpong Club" />
+
+  <!-- Open Graph (share ke WA, FB) -->
+  <meta property="og:title" content="Liga Pingpong NIC" />
+  <meta property="og:description" content="Pantau klasemen dan pertandingan pingpong secara realtime." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://pingpong-league.pages.dev" />
+  <meta property="og:image" content="/assets/icons/icon-512x512.png" />
+
+  <!-- Favicon -->
+  <link rel="icon" href="/assets/icons/icon-192x192.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Liga Pingpong NIC</title>
   <!-- <link rel="stylesheet" href="/public/assets/tailwind.css" /> -->
   <!-- Font Awesome — offline setelah setup.sh dijalankan, fallback ke CDN -->
   <link rel="stylesheet" href="/public/assets/fontawesome/css/all.min.css"
-        onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0/css/all.min.css'" />
+    onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0/css/all.min.css'" />
 </head>
 
 <body class="dark:bg-red-700">
 
-<!-- =================== AUTH OVERLAY =================== -->
-<div id="auth-overlay" class="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-6 hidden">
-  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 relative modal-enter">
-    <button onclick="closeAuthOverlay()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-xl">&times;</button>
-    <div class="flex justify-center mb-4">
-      <div class="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center">
-        <i class="fas fa-table-tennis text-blue-500 text-2xl"></i>
-      </div>
-    </div>
-    <h2 class="text-xl font-bold text-gray-800 mb-1 text-center">Login Admin</h2>
-    <p class="text-center text-gray-400 text-xs mb-6">Masuk dengan email & password admin.</p>
-    <div class="space-y-3">
-      <input id="auth-email" type="email" placeholder="Email admin"
-        class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
-      <div class="relative">
-        <input id="auth-password" type="password" placeholder="Password"
-          onkeydown="if(event.key==='Enter') handleLogin()"
-          class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 pr-11 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
-        <button type="button" onclick="togglePassword()" class="absolute right-3 top-3 text-gray-400 hover:text-gray-600">
-          <i id="eye-icon" class="fas fa-eye text-sm"></i>
-        </button>
-      </div>
-      <button onclick="handleLogin()" id="auth-btn-login"
-        class="w-full bg-blue-600 text-white rounded-xl py-3 font-semibold text-sm hover:bg-blue-700 transition-colors">
-        <i class="fas fa-sign-in-alt mr-2"></i>Masuk
-      </button>
-    </div>
-    <div class="text-center mt-3">
-      <button onclick="handleForgotPassword()" class="text-xs text-blue-500 hover:underline">Lupa password?</button>
-    </div>
-    <div id="auth-msg" class="hidden mt-4 p-3 rounded-xl text-center text-sm"></div>
-    <p class="text-center text-[11px] text-gray-400 mt-5">Hanya admin terdaftar yang bisa masuk.</p>
-  </div>
-</div>
-
-<!-- =================== HEADER =================== -->
-<div id="app-header" class="bg-white border-b border-gray-200 sticky top-0 z-50">
-  <div class="max-w-4xl mx-auto px-4 py-2 flex justify-between items-center">
-    <div class="flex items-center gap-2">
-      <span class="text-lg font-medium text-gray-800">Liga Pingpong</span>
-      <!-- Realtime indicator -->
-      <span id="rt-indicator" class="hidden items-center gap-1 text-[10px] text-green-600 font-semibold">
-        <span class="w-1 h-1 rounded-full bg-green-500 live-dot"></span>LIVE
-      </span>
-    </div>
-    <div class="flex items-center gap-2">
-      <!-- Sesi dropdown -->
-      <div class="relative">
-        <select id="selectSesi" onchange="onSesiChange()"
-          class="appearance-none bg-gray-100 border border-gray-200 text-gray-700 py-1 px-3 pr-7 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option>Memuat...</option>
-        </select>
-        <div class="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-500">
-          <i class="fas fa-chevron-down text-xs"></i>
+  <!-- =================== AUTH OVERLAY =================== -->
+  <div id="auth-overlay" class="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-6 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 relative modal-enter">
+      <button onclick="closeAuthOverlay()"
+        class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-xl">&times;</button>
+      <div class="flex justify-center mb-4">
+        <div class="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center">
+          <i class="fas fa-table-tennis text-blue-500 text-2xl"></i>
         </div>
       </div>
-      <!-- Dark mode toggle -->
-      <button onclick="toggleDarkMode()" id="btn-darkmode" title="Toggle dark mode"
-        class="hidden w-8 h-8 rounded-full items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">
-        <i id="darkmode-icon" class="fas fa-moon text-sm"></i>
-      </button>
-      <!-- Auth area -->
-      <button id="btn-show-login" onclick="openAuthOverlay()"
-        class="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600 border border-gray-200 hover:border-blue-300 px-3 py-1 rounded-full transition-all">
-        <i class="fas fa-lock text-[10px]"></i><span class="hidden sm:inline">Admin</span>
-      </button>
-      <div id="admin-badge" class="hidden items-center gap-2">
-        <span class="text-[11px] text-green-600 font-semibold hidden sm:inline">
-          <i class="fas fa-shield-alt mr-1"></i>Admin
+      <h2 class="text-xl font-bold text-gray-800 mb-1 text-center">Login Admin</h2>
+      <p class="text-center text-gray-400 text-xs mb-6">Masuk dengan email & password admin.</p>
+      <div class="space-y-3">
+        <input id="auth-email" type="email" placeholder="Email admin"
+          class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+        <div class="relative">
+          <input id="auth-password" type="password" placeholder="Password"
+            onkeydown="if(event.key==='Enter') handleLogin()"
+            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 pr-11 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+          <button type="button" onclick="togglePassword()"
+            class="absolute right-3 top-3 text-gray-400 hover:text-gray-600">
+            <i id="eye-icon" class="fas fa-eye text-sm"></i>
+          </button>
+        </div>
+        <button onclick="handleLogin()" id="auth-btn-login"
+          class="w-full bg-blue-600 text-white rounded-xl py-3 font-semibold text-sm hover:bg-blue-700 transition-colors">
+          <i class="fas fa-sign-in-alt mr-2"></i>Masuk
+        </button>
+      </div>
+      <div class="text-center mt-3">
+        <button onclick="handleForgotPassword()" class="text-xs text-blue-500 hover:underline">Lupa password?</button>
+      </div>
+      <div id="auth-msg" class="hidden mt-4 p-3 rounded-xl text-center text-sm"></div>
+      <p class="text-center text-[11px] text-gray-400 mt-5">Hanya admin terdaftar yang bisa masuk.</p>
+    </div>
+  </div>
+
+  <!-- =================== HEADER =================== -->
+  <div id="app-header" class="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <div class="max-w-4xl mx-auto px-4 py-2 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <span class="text-lg font-medium text-gray-800">Liga Pingpong</span>
+        <!-- Realtime indicator -->
+        <span id="rt-indicator" class="hidden items-center gap-1 text-[10px] text-green-600 font-semibold">
+          <span class="w-1 h-1 rounded-full bg-green-500 live-dot"></span>LIVE
         </span>
-        <button onclick="handleLogout()" title="Logout"
-          class="text-xs text-gray-400 hover:text-red-500 border border-gray-200 hover:border-red-300 p-1 rounded-full transition-all">
-          <i class="fas fa-sign-out-alt"></i>
+      </div>
+      <div class="flex items-center gap-2">
+        <!-- Sesi dropdown -->
+        <div class="relative">
+          <select id="selectSesi" onchange="onSesiChange()"
+            class="appearance-none bg-gray-100 border border-gray-200 text-gray-700 py-1 px-3 pr-7 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option>Memuat...</option>
+          </select>
+          <div class="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-500">
+            <i class="fas fa-chevron-down text-xs"></i>
+          </div>
+        </div>
+        <!-- Dark mode toggle -->
+        <button onclick="toggleDarkMode()" id="btn-darkmode" title="Toggle dark mode"
+          class="hidden w-8 h-8 rounded-full items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">
+          <i id="darkmode-icon" class="fas fa-moon text-sm"></i>
+        </button>
+        <!-- Auth area -->
+        <button id="btn-show-login" onclick="openAuthOverlay()"
+          class="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600 border border-gray-200 hover:border-blue-300 px-3 py-1 rounded-full transition-all">
+          <i class="fas fa-lock text-[10px]"></i><span class="hidden sm:inline">Admin</span>
+        </button>
+        <div id="admin-badge" class="hidden items-center gap-2">
+          <span class="text-[11px] text-green-600 font-semibold hidden sm:inline">
+            <i class="fas fa-shield-alt mr-1"></i>Admin
+          </span>
+          <button onclick="handleLogout()" title="Logout"
+            class="text-xs text-gray-400 hover:text-red-500 border border-gray-200 hover:border-red-300 p-1 rounded-full transition-all">
+            <i class="fas fa-sign-out-alt"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="infoSesi" class="text-[11px] text-gray-400 px-4 pb-1 hidden md:block text-right max-w-4xl mx-auto"></div>
+    <!-- Tabs -->
+    <div class="max-w-4xl mx-auto px-4 flex space-x-4 overflow-x-auto hide-scroll border-t border-gray-100">
+      <button onclick="showTab('klasemen')" id="btn-klasemen"
+        class="py-3 px-2 text-sm text-gray-500 tab-active whitespace-nowrap transition-all">Klasemen</button>
+      <button onclick="showTab('jadwal')" id="btn-jadwal"
+        class="py-3 px-2 text-sm text-gray-500 whitespace-nowrap transition-all">Jadwal</button>
+      <button onclick="showTab('hasil')" id="btn-hasil"
+        class="py-3 px-2 text-sm text-gray-500 whitespace-nowrap transition-all">Hasil</button>
+      <button onclick="showTab('podium')" id="btn-podium"
+        class="py-3 px-2 text-sm text-gray-500 whitespace-nowrap transition-all">Podium</button>
+      <!-- Admin-only tabs -->
+      <button onclick="showTab('pemain')" id="btn-pemain"
+        class="admin-tab hidden py-3 px-2 text-sm text-gray-500 whitespace-nowrap transition-all">Pemain</button>
+      <button onclick="showTab('log')" id="btn-log"
+        class="admin-tab hidden py-3 px-2 text-sm text-gray-500 whitespace-nowrap transition-all">Log</button>
+    </div>
+  </div>
+
+  <!-- =================== MAIN CONTENT =================== -->
+  <main class="max-w-4xl mx-auto p-0 sm:p-2">
+
+    <!-- KLASEMEN -->
+    <div id="tab-klasemen" class="content-section">
+      <div class="bg-white shadow-sm border border-gray-100 rounded-none sm:rounded-xl overflow-x-auto pb-2">
+        <table class="w-full text-left border-collapse">
+          <thead class="bg-gray-50 border-b border-gray-100">
+            <tr class="text-[11px] uppercase tracking-wider text-gray-500">
+              <th class="px-4 py-3 font-medium w-10 text-center">#</th>
+              <th class="px-2 py-3 font-medium">Pemain</th>
+              <th class="px-2 py-3 font-medium text-center">M</th>
+              <th class="px-2 py-3 font-medium text-center">W</th>
+              <th class="px-2 py-3 font-medium text-center">L</th>
+              <th class="px-2 py-3 font-medium text-center">WO</th>
+              <th class="px-3 py-3 font-medium text-center text-gray-800">Poin</th>
+              <th class="px-2 py-3 font-medium text-center">R.Set</th>
+              <th class="px-2 py-3 font-medium text-center">R.Skor</th>
+            </tr>
+          </thead>
+          <tbody id="body-klasemen" class="divide-y divide-gray-100">
+            <tr>
+              <td colspan="9" class="py-8 text-center text-sm text-gray-400 animate-pulse">Memuat...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- JADWAL -->
+    <div id="tab-jadwal" class="content-section hidden px-4 sm:px-0">
+      <div id="list-jadwal">
+        <div class="text-center py-12 text-gray-400 text-sm animate-pulse">Memuat...</div>
+      </div>
+    </div>
+
+    <!-- HASIL -->
+    <div id="tab-hasil" class="content-section hidden px-4 sm:px-0">
+      <div id="list-hasil">
+        <div class="text-center py-12 text-gray-400 text-sm animate-pulse">Memuat...</div>
+      </div>
+    </div>
+
+    <!-- PODIUM -->
+    <div id="tab-podium" class="content-section hidden px-4 sm:px-0">
+      <div class="bg-white shadow-sm border border-gray-100 rounded-xl p-6 text-center">
+        <h2 class="text-xl font-bold mb-6">🏆 Podium</h2>
+        <div class="flex justify-center items-end space-x-6">
+          <div class="w-24">
+            <div class="bg-gray-300 h-28 rounded-t-xl flex items-center justify-center text-lg font-bold">🥈</div>
+            <div class="bg-gray-100 py-2 text-sm font-semibold" id="nama-2">-</div>
+          </div>
+          <div class="w-28">
+            <div class="bg-yellow-400 h-36 rounded-t-xl flex items-center justify-center text-xl font-bold">🥇</div>
+            <div class="bg-yellow-50 py-2 text-sm font-semibold" id="nama-1">-</div>
+          </div>
+          <div class="w-24">
+            <div class="bg-orange-400 h-24 rounded-t-xl flex items-center justify-center text-lg font-bold">🥉</div>
+            <div class="bg-orange-50 py-2 text-sm font-semibold" id="nama-3">-</div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-8">
+        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4 text-center">Statistik Liga</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="stat-card p-4 rounded-lg bg-blue-50 border border-blue-100">
+            <div class="stat-title text-blue-500">Most Set Win</div>
+            <div id="stat-set-nama" class="stat-nama">-</div>
+            <div id="stat-set-angka" class="stat-angka">0</div>
+          </div>
+          <div class="stat-card p-4 rounded-lg bg-green-50 border border-green-100">
+            <div class="stat-title text-green-500">Most Points</div>
+            <div id="stat-bola-nama" class="stat-nama">-</div>
+            <div id="stat-bola-angka" class="stat-angka">0</div>
+          </div>
+          <div class="stat-card p-4 rounded-lg bg-purple-50 border border-purple-100">
+            <div class="stat-title text-purple-500">Best Rasio Set</div>
+            <div id="stat-rasio-nama" class="stat-nama">-</div>
+            <div id="stat-rasio-angka" class="stat-angka">0</div>
+          </div>
+          <div class="stat-card p-4 rounded-lg bg-yellow-50 border border-yellow-100">
+            <div class="stat-title text-yellow-600">Best Rasio Bola</div>
+            <div id="stat-bolarasio-nama" class="stat-nama">-</div>
+            <div id="stat-bolarasio-angka" class="stat-angka">0</div>
+          </div>
+          <div class="stat-card p-4 rounded-lg bg-red-50 border border-red-100">
+            <div class="stat-title text-red-500">Most WO</div>
+            <div id="stat-wo-nama" class="stat-nama">-</div>
+            <div id="stat-wo-angka" class="stat-angka">0</div>
+          </div>
+          <div class="stat-card p-4 rounded-lg bg-gray-50 border border-gray-200">
+            <div class="stat-title text-gray-500">Most Loss</div>
+            <div id="stat-loss-nama" class="stat-nama">-</div>
+            <div id="stat-loss-angka" class="stat-angka">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MANAJEMEN PEMAIN (admin only) -->
+    <div id="tab-pemain" class="content-section hidden px-4 sm:px-0">
+      <div class="flex justify-between items-center mb-3 mt-2">
+        <h2 class="text-base font-bold text-gray-700">Manajemen Pemain</h2>
+        <button onclick="openModalTambahPemain()"
+          class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors">
+          <i class="fas fa-plus mr-1"></i>Tambah
         </button>
       </div>
+      <div id="list-pemain" class="space-y-2"></div>
     </div>
-  </div>
-  <div id="infoSesi" class="text-[11px] text-gray-400 px-4 pb-1 hidden md:block text-right max-w-4xl mx-auto"></div>
-  <!-- Tabs -->
-  <div class="max-w-4xl mx-auto px-4 flex space-x-4 overflow-x-auto hide-scroll border-t border-gray-100">
-    <button onclick="showTab('klasemen')" id="btn-klasemen" class="py-3 px-2 text-sm text-gray-500 tab-active whitespace-nowrap transition-all">Klasemen</button>
-    <button onclick="showTab('jadwal')"   id="btn-jadwal"   class="py-3 px-2 text-sm text-gray-500 whitespace-nowrap transition-all">Jadwal</button>
-    <button onclick="showTab('hasil')"    id="btn-hasil"    class="py-3 px-2 text-sm text-gray-500 whitespace-nowrap transition-all">Hasil</button>
-    <button onclick="showTab('podium')"   id="btn-podium"   class="py-3 px-2 text-sm text-gray-500 whitespace-nowrap transition-all">Podium</button>
-    <!-- Admin-only tabs -->
-    <button onclick="showTab('pemain')"   id="btn-pemain"   class="admin-tab hidden py-3 px-2 text-sm text-gray-500 whitespace-nowrap transition-all">Pemain</button>
-    <button onclick="showTab('log')"      id="btn-log"      class="admin-tab hidden py-3 px-2 text-sm text-gray-500 whitespace-nowrap transition-all">Log</button>
-  </div>
-</div>
 
-<!-- =================== MAIN CONTENT =================== -->
-<main class="max-w-4xl mx-auto p-0 sm:p-2">
+    <!-- LOG AKTIVITAS (admin only) -->
+    <div id="tab-log" class="content-section hidden px-4 sm:px-0">
+      <div class="flex justify-between items-center mb-3 mt-2">
+        <h2 class="text-base font-bold text-gray-700">Log Aktivitas Admin</h2>
+        <button onclick="loadLog()" class="text-xs text-blue-500 hover:underline"><i
+            class="fas fa-sync-alt mr-1"></i>Refresh</button>
+      </div>
+      <div id="list-log" class="space-y-2"></div>
+    </div>
+  </main>
 
-  <!-- KLASEMEN -->
-  <div id="tab-klasemen" class="content-section">
-    <div class="bg-white shadow-sm border border-gray-100 rounded-none sm:rounded-xl overflow-x-auto pb-2">
-      <table class="w-full text-left border-collapse">
-        <thead class="bg-gray-50 border-b border-gray-100">
-          <tr class="text-[11px] uppercase tracking-wider text-gray-500">
-            <th class="px-4 py-3 font-medium w-10 text-center">#</th>
-            <th class="px-2 py-3 font-medium">Pemain</th>
-            <th class="px-2 py-3 font-medium text-center">M</th>
-            <th class="px-2 py-3 font-medium text-center">W</th>
-            <th class="px-2 py-3 font-medium text-center">L</th>
-            <th class="px-2 py-3 font-medium text-center">WO</th>
-            <th class="px-3 py-3 font-medium text-center text-gray-800">Poin</th>
-            <th class="px-2 py-3 font-medium text-center">R.Set</th>
-            <th class="px-2 py-3 font-medium text-center">R.Skor</th>
-          </tr>
-        </thead>
-        <tbody id="body-klasemen" class="divide-y divide-gray-100">
-          <tr><td colspan="9" class="py-8 text-center text-sm text-gray-400 animate-pulse">Memuat...</td></tr>
-        </tbody>
-      </table>
+  <!-- Info Poin -->
+  <div class="max-w-4xl mx-auto sm:p-2 mt-2 mb-20">
+    <div class="bg-white border border-gray-100 sm:rounded-2xl p-4 shadow-sm">
+      <div class="flex flex-wrap gap-4 mb-3 border-b border-gray-50 pb-3">
+        <div class="flex items-center gap-2"><span
+            class="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-md">MENANG</span><span
+            class="text-xs text-gray-600">+2 Poin</span></div>
+        <div class="flex items-center gap-2"><span
+            class="px-2 py-1 bg-red-100 text-red-700 text-[10px] font-bold rounded-md">KALAH</span><span
+            class="text-xs text-gray-600">+1 Poin</span></div>
+        <div class="flex items-center gap-2"><span
+            class="px-2 py-1 bg-gray-100 text-gray-700 text-[10px] font-bold rounded-md">WO</span><span
+            class="text-xs text-gray-600">0 Poin</span></div>
+      </div>
+      <h4 class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Penentuan Peringkat</h4>
+      <ol class="text-xs text-gray-600 space-y-1 list-decimal ml-4">
+        <li><b>Poin</b> tertinggi</li>
+        <li><b>Rasio Set kemenangan</b> jika poin sama</li>
+        <li><b>Rasio Skor Terbesar</b> jika poin dan rasio set sama</li>
+      </ol>
     </div>
   </div>
 
-  <!-- JADWAL -->
-  <div id="tab-jadwal" class="content-section hidden px-4 sm:px-0">
-    <div id="list-jadwal"><div class="text-center py-12 text-gray-400 text-sm animate-pulse">Memuat...</div></div>
+  <!-- =================== FAB ADMIN =================== -->
+  <div id="fab-admin" class="fixed bottom-6 right-6 flex-col items-end space-y-3 hidden">
+    <button onclick="openModalRegister()" title="Daftarkan Admin Baru"
+      class="bg-gray-600 hover:bg-gray-700 text-white w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-colors">
+      <i class="fas fa-user-plus text-sm"></i>
+    </button>
+    <button onclick="openModalGenerate()" title="Generate Jadwal"
+      class="bg-green-600 hover:bg-green-700 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-colors">
+      <i class="fas fa-calendar-plus text-base"></i>
+    </button>
+    <button onclick="openModal()" title="Input / Edit Skor"
+      class="bg-blue-600 hover:bg-blue-700 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-colors">
+      <i class="fas fa-plus text-lg"></i>
+    </button>
   </div>
 
-  <!-- HASIL -->
-  <div id="tab-hasil" class="content-section hidden px-4 sm:px-0">
-    <div id="list-hasil"><div class="text-center py-12 text-gray-400 text-sm animate-pulse">Memuat...</div></div>
-  </div>
-
-  <!-- PODIUM -->
-  <div id="tab-podium" class="content-section hidden px-4 sm:px-0">
-    <div class="bg-white shadow-sm border border-gray-100 rounded-xl p-6 text-center">
-      <h2 class="text-xl font-bold mb-6">🏆 Podium</h2>
-      <div class="flex justify-center items-end space-x-6">
-        <div class="w-24"><div class="bg-gray-300 h-28 rounded-t-xl flex items-center justify-center text-lg font-bold">🥈</div><div class="bg-gray-100 py-2 text-sm font-semibold" id="nama-2">-</div></div>
-        <div class="w-28"><div class="bg-yellow-400 h-36 rounded-t-xl flex items-center justify-center text-xl font-bold">🥇</div><div class="bg-yellow-50 py-2 text-sm font-semibold" id="nama-1">-</div></div>
-        <div class="w-24"><div class="bg-orange-400 h-24 rounded-t-xl flex items-center justify-center text-lg font-bold">🥉</div><div class="bg-orange-50 py-2 text-sm font-semibold" id="nama-3">-</div></div>
+  <!-- =================== MODAL INPUT / EDIT SKOR =================== -->
+  <div id="modalInput" class="fixed inset-0 bg-black/50 hidden z-[60] flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden modal-enter">
+      <div class="p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 id="modal-skor-title" class="text-xl font-bold text-gray-800">Input Skor</h3>
+          <button onclick="closeModal()" class="text-gray-400 hover:text-gray-700 text-xl">&times;</button>
+        </div>
+        <div class="space-y-4">
+          <!-- Pilih pertandingan (hanya mode input baru) -->
+          <div id="match-picker">
+            <label class="block text-sm font-semibold text-gray-600 mb-2">Cari & Pilih Pertandingan</label>
+            <div class="relative mb-2">
+              <input type="text" id="searchMatch" oninput="filterMatchList()" placeholder="Ketik nama pemain..."
+                class="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 pl-3 pr-10 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+              <div class="absolute right-3 top-2 text-gray-400"><i class="fas fa-search"></i></div>
+            </div>
+            <div id="matchListContainer"
+              class="max-h-40 overflow-y-auto border border-gray-100 rounded-xl divide-y bg-gray-50/50">
+              <div class="p-4 text-center text-xs text-gray-400">Memuat...</div>
+            </div>
+          </div>
+          <input type="hidden" id="matchId" />
+          <div id="previewPemain"
+            class="hidden bg-blue-50 border border-blue-100 rounded-xl p-3 text-sm text-blue-700 text-center font-semibold">
+            <span id="previewP1"></span><span class="mx-2 text-blue-300">vs</span><span id="previewP2"></span>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-500 mb-1">Tanggal & Waktu</label>
+              <input type="datetime-local" id="inp-tgl"
+                class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-500 mb-1">WO (opsional)</label>
+              <select id="inp-wo" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm">
+                <option value="">-- Normal --</option>
+                <option value="W-0">P1 Menang WO</option>
+                <option value="0-W">P2 Menang WO</option>
+                <option value="W-W">Double WO</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Skor Set (kosongkan jika WO)</label>
+            <div class="grid grid-cols-5 gap-2">
+              <input id="inp-s1" type="text" placeholder="S1"
+                class="text-center bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs uppercase outline-none focus:ring-1 focus:ring-blue-500" />
+              <input id="inp-s2" type="text" placeholder="S2"
+                class="text-center bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs uppercase outline-none focus:ring-1 focus:ring-blue-500" />
+              <input id="inp-s3" type="text" placeholder="S3"
+                class="text-center bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs uppercase outline-none focus:ring-1 focus:ring-blue-500" />
+              <input id="inp-s4" type="text" placeholder="S4"
+                class="text-center bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs uppercase outline-none focus:ring-1 focus:ring-blue-500" />
+              <input id="inp-s5" type="text" placeholder="S5"
+                class="text-center bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs uppercase outline-none focus:ring-1 focus:ring-blue-500" />
+            </div>
+          </div>
+          <div id="skor-msg" class="hidden p-2 rounded-lg text-xs text-center"></div>
+          <div class="flex space-x-3 pt-2">
+            <button onclick="closeModal()"
+              class="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50">Batal</button>
+            <button id="btnSimpan" onclick="submitSkor()"
+              class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 shadow-md">Simpan</button>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="mt-8">
-      <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4 text-center">Statistik Liga</h3>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div class="stat-card p-4 rounded-lg bg-blue-50 border border-blue-100"><div class="stat-title text-blue-500">Most Set Win</div><div id="stat-set-nama" class="stat-nama">-</div><div id="stat-set-angka" class="stat-angka">0</div></div>
-        <div class="stat-card p-4 rounded-lg bg-green-50 border border-green-100"><div class="stat-title text-green-500">Most Points</div><div id="stat-bola-nama" class="stat-nama">-</div><div id="stat-bola-angka" class="stat-angka">0</div></div>
-        <div class="stat-card p-4 rounded-lg bg-purple-50 border border-purple-100"><div class="stat-title text-purple-500">Best Rasio Set</div><div id="stat-rasio-nama" class="stat-nama">-</div><div id="stat-rasio-angka" class="stat-angka">0</div></div>
-        <div class="stat-card p-4 rounded-lg bg-yellow-50 border border-yellow-100"><div class="stat-title text-yellow-600">Best Rasio Bola</div><div id="stat-bolarasio-nama" class="stat-nama">-</div><div id="stat-bolarasio-angka" class="stat-angka">0</div></div>
-        <div class="stat-card p-4 rounded-lg bg-red-50 border border-red-100"><div class="stat-title text-red-500">Most WO</div><div id="stat-wo-nama" class="stat-nama">-</div><div id="stat-wo-angka" class="stat-angka">0</div></div>
-        <div class="stat-card p-4 rounded-lg bg-gray-50 border border-gray-200"><div class="stat-title text-gray-500">Most Loss</div><div id="stat-loss-nama" class="stat-nama">-</div><div id="stat-loss-angka" class="stat-angka">0</div></div>
-      </div>
-    </div>
   </div>
 
-  <!-- MANAJEMEN PEMAIN (admin only) -->
-  <div id="tab-pemain" class="content-section hidden px-4 sm:px-0">
-    <div class="flex justify-between items-center mb-3 mt-2">
-      <h2 class="text-base font-bold text-gray-700">Manajemen Pemain</h2>
-      <button onclick="openModalTambahPemain()"
-        class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors">
-        <i class="fas fa-plus mr-1"></i>Tambah
-      </button>
-    </div>
-    <div id="list-pemain" class="space-y-2"></div>
-  </div>
-
-  <!-- LOG AKTIVITAS (admin only) -->
-  <div id="tab-log" class="content-section hidden px-4 sm:px-0">
-    <div class="flex justify-between items-center mb-3 mt-2">
-      <h2 class="text-base font-bold text-gray-700">Log Aktivitas Admin</h2>
-      <button onclick="loadLog()" class="text-xs text-blue-500 hover:underline"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
-    </div>
-    <div id="list-log" class="space-y-2"></div>
-  </div>
-</main>
-
-<!-- Info Poin -->
-<div class="max-w-4xl mx-auto sm:p-2 mt-2 mb-20">
-  <div class="bg-white border border-gray-100 sm:rounded-2xl p-4 shadow-sm">
-    <div class="flex flex-wrap gap-4 mb-3 border-b border-gray-50 pb-3">
-      <div class="flex items-center gap-2"><span class="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-md">MENANG</span><span class="text-xs text-gray-600">+2 Poin</span></div>
-      <div class="flex items-center gap-2"><span class="px-2 py-1 bg-red-100 text-red-700 text-[10px] font-bold rounded-md">KALAH</span><span class="text-xs text-gray-600">+1 Poin</span></div>
-      <div class="flex items-center gap-2"><span class="px-2 py-1 bg-gray-100 text-gray-700 text-[10px] font-bold rounded-md">WO</span><span class="text-xs text-gray-600">0 Poin</span></div>
-    </div>
-    <h4 class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Penentuan Peringkat</h4>
-    <ol class="text-xs text-gray-600 space-y-1 list-decimal ml-4">
-      <li><b>Poin</b> tertinggi</li>
-      <li><b>Rasio Set kemenangan</b> jika poin sama</li>
-      <li><b>Rasio Skor Terbesar</b> jika poin dan rasio set sama</li>
-    </ol>
-  </div>
-</div>
-
-<!-- =================== FAB ADMIN =================== -->
-<div id="fab-admin" class="fixed bottom-6 right-6 flex-col items-end space-y-3 hidden">
-  <button onclick="openModalRegister()" title="Daftarkan Admin Baru"
-    class="bg-gray-600 hover:bg-gray-700 text-white w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-colors">
-    <i class="fas fa-user-plus text-sm"></i>
-  </button>
-  <button onclick="openModalGenerate()" title="Generate Jadwal"
-    class="bg-green-600 hover:bg-green-700 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-colors">
-    <i class="fas fa-calendar-plus text-base"></i>
-  </button>
-  <button onclick="openModal()" title="Input / Edit Skor"
-    class="bg-blue-600 hover:bg-blue-700 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-colors">
-    <i class="fas fa-plus text-lg"></i>
-  </button>
-</div>
-
-<!-- =================== MODAL INPUT / EDIT SKOR =================== -->
-<div id="modalInput" class="fixed inset-0 bg-black/50 hidden z-[60] flex items-center justify-center p-4">
-  <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden modal-enter">
-    <div class="p-6">
+  <!-- =================== MODAL UBAH JADWAL =================== -->
+  <div id="modalUbahJadwal" class="fixed inset-0 bg-black/50 hidden z-[60] flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 modal-enter">
       <div class="flex justify-between items-center mb-4">
-        <h3 id="modal-skor-title" class="text-xl font-bold text-gray-800">Input Skor</h3>
-        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-700 text-xl">&times;</button>
+        <h3 class="text-lg font-bold text-gray-800">Ubah Jadwal</h3>
+        <button onclick="closeModalUbahJadwal()" class="text-gray-400 hover:text-gray-700 text-xl">&times;</button>
       </div>
-      <div class="space-y-4">
-        <!-- Pilih pertandingan (hanya mode input baru) -->
-        <div id="match-picker">
-          <label class="block text-sm font-semibold text-gray-600 mb-2">Cari & Pilih Pertandingan</label>
-          <div class="relative mb-2">
-            <input type="text" id="searchMatch" oninput="filterMatchList()" placeholder="Ketik nama pemain..."
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 pl-3 pr-10 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-            <div class="absolute right-3 top-2 text-gray-400"><i class="fas fa-search"></i></div>
-          </div>
-          <div id="matchListContainer" class="max-h-40 overflow-y-auto border border-gray-100 rounded-xl divide-y bg-gray-50/50">
-            <div class="p-4 text-center text-xs text-gray-400">Memuat...</div>
-          </div>
+      <input type="hidden" id="ubah-match-id" />
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Pemain 1</label>
+          <input id="ubah-p1" type="text"
+            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
-        <input type="hidden" id="matchId" />
-        <div id="previewPemain" class="hidden bg-blue-50 border border-blue-100 rounded-xl p-3 text-sm text-blue-700 text-center font-semibold">
-          <span id="previewP1"></span><span class="mx-2 text-blue-300">vs</span><span id="previewP2"></span>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Pemain 2</label>
+          <input id="ubah-p2" type="text"
+            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1">Tanggal & Waktu</label>
-            <input type="datetime-local" id="inp-tgl" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm" />
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1">WO (opsional)</label>
-            <select id="inp-wo" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm">
-              <option value="">-- Normal --</option>
-              <option value="W-0">P1 Menang WO</option>
-              <option value="0-W">P2 Menang WO</option>
-              <option value="W-W">Double WO</option>
-            </select>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Tanggal & Waktu</label>
+          <input id="ubah-tgl" type="datetime-local"
+            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div id="ubah-msg" class="hidden p-2 rounded-lg text-xs text-center"></div>
+        <div class="flex space-x-3 pt-2">
+          <button onclick="closeModalUbahJadwal()"
+            class="flex-1 border border-gray-200 text-gray-600 rounded-xl py-2 text-sm hover:bg-gray-50">Batal</button>
+          <button onclick="submitUbahJadwal()" id="btn-ubah-jadwal"
+            class="flex-1 bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold hover:bg-blue-700">Simpan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== MODAL TAMBAH/EDIT PEMAIN =================== -->
+  <div id="modalPemain" class="fixed inset-0 bg-black/50 hidden z-[60] flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 modal-enter">
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="modal-pemain-title" class="text-lg font-bold text-gray-800">Tambah Pemain</h3>
+        <button onclick="closeModalPemain()" class="text-gray-400 hover:text-gray-700 text-xl">&times;</button>
+      </div>
+      <input type="hidden" id="pemain-id" />
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Nama Pemain</label>
+          <input id="pemain-nama" type="text" placeholder="Nama lengkap"
+            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Sesi</label>
+          <select id="pemain-sesi"
+            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"></select>
+        </div>
+        <div id="pemain-msg" class="hidden p-2 rounded-lg text-xs text-center"></div>
+        <div class="flex space-x-3 pt-2">
+          <button onclick="closeModalPemain()"
+            class="flex-1 border border-gray-200 text-gray-600 rounded-xl py-2 text-sm hover:bg-gray-50">Batal</button>
+          <button onclick="submitPemain()" id="btn-simpan-pemain"
+            class="flex-1 bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold hover:bg-blue-700">Simpan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== MODAL DETAIL PEMAIN =================== -->
+  <div id="modalDetail" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-md h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+      <div class="p-5 border-b flex justify-between items-center bg-black/80 text-white">
+        <h3 id="detailNamaPemain" class="text-xl font-bold">Pemain</h3>
+        <div class="flex items-center gap-3 ml-auto">
+          <div id="h2hToggle" class="flex space-x-1"></div>
+          <button onclick="closeDetail()" class="text-white/80 hover:text-white text-2xl">&times;</button>
+        </div>
+      </div>
+      <div class="overflow-y-auto p-5 space-y-6">
+        <div id="detailStatistik" class="grid grid-cols-3 gap-3"></div>
+        <div>
+          <h4 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Hasil</h4>
+          <div id="detailListHasil"></div>
+        </div>
+        <div>
+          <h4 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Jadwal</h4>
+          <div id="detailListJadwal"></div>
+        </div>
+        <div>
+          <h4 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Head to Head</h4>
+          <div id="detailH2H"></div>
+        </div>
+        <div>
+          <h4 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Win Rate per Set</h4>
+          <div id="detailWinRateSet"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== MODAL GENERATE JADWAL =================== -->
+  <div id="modalGenerate" class="fixed inset-0 bg-black/50 hidden z-[60] flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh] modal-enter">
+      <div class="p-5 bg-green-600 text-white flex justify-between items-center shrink-0">
+        <div>
+          <h3 class="text-lg font-bold">🗓️ Generate Jadwal Round Robin</h3>
+          <p class="text-xs opacity-80">Jadwal otomatis terdistribusi merata</p>
+        </div>
+        <button onclick="closeModalGenerate()" class="text-white/80 hover:text-white text-2xl">&times;</button>
+      </div>
+      <div id="generate-step-1" class="p-5 overflow-y-auto space-y-4">
+        <div class="bg-green-50 border border-green-100 rounded-xl p-3 text-xs text-green-700">Pastikan
+          <b>MASTER_PEMAIN</b> di Supabase sudah diisi pemain AKTIF.</div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Sesi</label>
+          <select id="gen-sesi"
+            class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+            <option value="">-- Pilih Sesi --</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-2">Mode Pertandingan</label>
+          <div class="grid grid-cols-2 gap-3">
+            <label id="label-single"
+              class="cursor-pointer border-2 border-green-500 bg-green-50 rounded-xl p-3 text-center">
+              <input type="radio" name="gen-mode" value="single" checked class="hidden" />
+              <div class="text-xl mb-1">🔁</div>
+              <div class="text-sm font-bold text-green-700">Single</div>
+              <div class="text-[10px] text-gray-500">1x ketemu tiap lawan</div>
+            </label>
+            <label id="label-double"
+              class="cursor-pointer border-2 border-gray-200 bg-gray-50 rounded-xl p-3 text-center">
+              <input type="radio" name="gen-mode" value="double" class="hidden" />
+              <div class="text-xl mb-1">🔄</div>
+              <div class="text-sm font-bold text-gray-600">Home & Away</div>
+              <div class="text-[10px] text-gray-500">2x ketemu tiap lawan</div>
+            </label>
           </div>
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1">Skor Set (kosongkan jika WO)</label>
-          <div class="grid grid-cols-5 gap-2">
-            <input id="inp-s1" type="text" placeholder="S1" class="text-center bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs uppercase outline-none focus:ring-1 focus:ring-blue-500" />
-            <input id="inp-s2" type="text" placeholder="S2" class="text-center bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs uppercase outline-none focus:ring-1 focus:ring-blue-500" />
-            <input id="inp-s3" type="text" placeholder="S3" class="text-center bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs uppercase outline-none focus:ring-1 focus:ring-blue-500" />
-            <input id="inp-s4" type="text" placeholder="S4" class="text-center bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs uppercase outline-none focus:ring-1 focus:ring-blue-500" />
-            <input id="inp-s5" type="text" placeholder="S5" class="text-center bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs uppercase outline-none focus:ring-1 focus:ring-blue-500" />
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Pertandingan per Hari</label>
+          <div class="flex items-center space-x-3">
+            <button onclick="ubahMatchPerHari(-1)"
+              class="w-9 h-9 rounded-lg bg-gray-100 hover:bg-gray-200 text-lg font-bold flex items-center justify-center">−</button>
+            <span id="val-matchPerHari" class="text-xl font-black text-gray-800 w-8 text-center">2</span>
+            <button onclick="ubahMatchPerHari(1)"
+              class="w-9 h-9 rounded-lg bg-gray-100 hover:bg-gray-200 text-lg font-bold flex items-center justify-center">+</button>
+            <span class="text-xs text-gray-400">match/hari</span>
           </div>
         </div>
-        <div id="skor-msg" class="hidden p-2 rounded-lg text-xs text-center"></div>
-        <div class="flex space-x-3 pt-2">
-          <button onclick="closeModal()" class="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50">Batal</button>
-          <button id="btnSimpan" onclick="submitSkor()" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 shadow-md">Simpan</button>
+        <button onclick="jalankanPreview()"
+          class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold text-sm transition-colors">Lihat
+          Preview →</button>
+      </div>
+      <div id="generate-step-2" class="hidden flex flex-col overflow-hidden">
+        <div id="gen-ringkasan" class="p-5 border-b shrink-0 space-y-3"></div>
+        <div class="overflow-y-auto flex-1">
+          <table class="w-full text-xs">
+            <thead class="bg-gray-50 sticky top-0">
+              <tr class="text-[10px] uppercase text-gray-400">
+                <th class="px-4 py-2 text-left">Tanggal</th>
+                <th class="px-2 py-2">P1</th>
+                <th class="px-2 py-2 text-center">vs</th>
+                <th class="px-2 py-2 text-right">P2</th>
+              </tr>
+            </thead>
+            <tbody id="gen-tabel-jadwal" class="divide-y divide-gray-100"></tbody>
+          </table>
         </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- =================== MODAL UBAH JADWAL =================== -->
-<div id="modalUbahJadwal" class="fixed inset-0 bg-black/50 hidden z-[60] flex items-center justify-center p-4">
-  <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 modal-enter">
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="text-lg font-bold text-gray-800">Ubah Jadwal</h3>
-      <button onclick="closeModalUbahJadwal()" class="text-gray-400 hover:text-gray-700 text-xl">&times;</button>
-    </div>
-    <input type="hidden" id="ubah-match-id" />
-    <div class="space-y-3">
-      <div>
-        <label class="block text-xs font-medium text-gray-500 mb-1">Pemain 1</label>
-        <input id="ubah-p1" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-500 mb-1">Pemain 2</label>
-        <input id="ubah-p2" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-500 mb-1">Tanggal & Waktu</label>
-        <input id="ubah-tgl" type="datetime-local" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-      </div>
-      <div id="ubah-msg" class="hidden p-2 rounded-lg text-xs text-center"></div>
-      <div class="flex space-x-3 pt-2">
-        <button onclick="closeModalUbahJadwal()" class="flex-1 border border-gray-200 text-gray-600 rounded-xl py-2 text-sm hover:bg-gray-50">Batal</button>
-        <button onclick="submitUbahJadwal()" id="btn-ubah-jadwal" class="flex-1 bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold hover:bg-blue-700">Simpan</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- =================== MODAL TAMBAH/EDIT PEMAIN =================== -->
-<div id="modalPemain" class="fixed inset-0 bg-black/50 hidden z-[60] flex items-center justify-center p-4">
-  <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 modal-enter">
-    <div class="flex justify-between items-center mb-4">
-      <h3 id="modal-pemain-title" class="text-lg font-bold text-gray-800">Tambah Pemain</h3>
-      <button onclick="closeModalPemain()" class="text-gray-400 hover:text-gray-700 text-xl">&times;</button>
-    </div>
-    <input type="hidden" id="pemain-id" />
-    <div class="space-y-3">
-      <div>
-        <label class="block text-xs font-medium text-gray-500 mb-1">Nama Pemain</label>
-        <input id="pemain-nama" type="text" placeholder="Nama lengkap" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-500 mb-1">Sesi</label>
-        <select id="pemain-sesi" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"></select>
-      </div>
-      <div id="pemain-msg" class="hidden p-2 rounded-lg text-xs text-center"></div>
-      <div class="flex space-x-3 pt-2">
-        <button onclick="closeModalPemain()" class="flex-1 border border-gray-200 text-gray-600 rounded-xl py-2 text-sm hover:bg-gray-50">Batal</button>
-        <button onclick="submitPemain()" id="btn-simpan-pemain" class="flex-1 bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold hover:bg-blue-700">Simpan</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- =================== MODAL DETAIL PEMAIN =================== -->
-<div id="modalDetail" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
-  <div class="bg-white rounded-2xl w-full max-w-md h-[90vh] overflow-hidden flex flex-col shadow-2xl">
-    <div class="p-5 border-b flex justify-between items-center bg-black/80 text-white">
-      <h3 id="detailNamaPemain" class="text-xl font-bold">Pemain</h3>
-      <div class="flex items-center gap-3 ml-auto">
-        <div id="h2hToggle" class="flex space-x-1"></div>
-        <button onclick="closeDetail()" class="text-white/80 hover:text-white text-2xl">&times;</button>
-      </div>
-    </div>
-    <div class="overflow-y-auto p-5 space-y-6">
-      <div id="detailStatistik" class="grid grid-cols-3 gap-3"></div>
-      <div><h4 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Hasil</h4><div id="detailListHasil"></div></div>
-      <div><h4 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Jadwal</h4><div id="detailListJadwal"></div></div>
-      <div><h4 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Head to Head</h4><div id="detailH2H"></div></div>
-      <div><h4 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Win Rate per Set</h4><div id="detailWinRateSet"></div></div>
-    </div>
-  </div>
-</div>
-
-<!-- =================== MODAL GENERATE JADWAL =================== -->
-<div id="modalGenerate" class="fixed inset-0 bg-black/50 hidden z-[60] flex items-center justify-center p-4">
-  <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh] modal-enter">
-    <div class="p-5 bg-green-600 text-white flex justify-between items-center shrink-0">
-      <div><h3 class="text-lg font-bold">🗓️ Generate Jadwal Round Robin</h3><p class="text-xs opacity-80">Jadwal otomatis terdistribusi merata</p></div>
-      <button onclick="closeModalGenerate()" class="text-white/80 hover:text-white text-2xl">&times;</button>
-    </div>
-    <div id="generate-step-1" class="p-5 overflow-y-auto space-y-4">
-      <div class="bg-green-50 border border-green-100 rounded-xl p-3 text-xs text-green-700">Pastikan <b>MASTER_PEMAIN</b> di Supabase sudah diisi pemain AKTIF.</div>
-      <div>
-        <label class="block text-xs font-semibold text-gray-600 mb-1">Sesi</label>
-        <select id="gen-sesi" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
-          <option value="">-- Pilih Sesi --</option>
-        </select>
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-gray-600 mb-2">Mode Pertandingan</label>
-        <div class="grid grid-cols-2 gap-3">
-          <label id="label-single" class="cursor-pointer border-2 border-green-500 bg-green-50 rounded-xl p-3 text-center">
-            <input type="radio" name="gen-mode" value="single" checked class="hidden" /><div class="text-xl mb-1">🔁</div><div class="text-sm font-bold text-green-700">Single</div><div class="text-[10px] text-gray-500">1x ketemu tiap lawan</div>
-          </label>
-          <label id="label-double" class="cursor-pointer border-2 border-gray-200 bg-gray-50 rounded-xl p-3 text-center">
-            <input type="radio" name="gen-mode" value="double" class="hidden" /><div class="text-xl mb-1">🔄</div><div class="text-sm font-bold text-gray-600">Home & Away</div><div class="text-[10px] text-gray-500">2x ketemu tiap lawan</div>
+        <div id="gen-warning-overwrite"
+          class="hidden mx-5 mb-3 mt-2 bg-yellow-50 border border-yellow-200 rounded-xl p-3">
+          <p class="text-xs text-yellow-800 font-semibold">⚠️ Sudah ada jadwal pending di sesi ini!</p>
+          <label class="flex items-center mt-2 space-x-2 cursor-pointer">
+            <input type="checkbox" id="chk-overwrite" class="rounded" />
+            <span class="text-xs text-yellow-800 font-medium">Saya mengerti, ganti jadwal lama yang belum ada
+              skornya</span>
           </label>
         </div>
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-gray-600 mb-1">Pertandingan per Hari</label>
-        <div class="flex items-center space-x-3">
-          <button onclick="ubahMatchPerHari(-1)" class="w-9 h-9 rounded-lg bg-gray-100 hover:bg-gray-200 text-lg font-bold flex items-center justify-center">−</button>
-          <span id="val-matchPerHari" class="text-xl font-black text-gray-800 w-8 text-center">2</span>
-          <button onclick="ubahMatchPerHari(1)"  class="w-9 h-9 rounded-lg bg-gray-100 hover:bg-gray-200 text-lg font-bold flex items-center justify-center">+</button>
-          <span class="text-xs text-gray-400">match/hari</span>
+        <div class="p-4 border-t flex space-x-3 shrink-0">
+          <button onclick="kembaliKeStep1()"
+            class="flex-1 border border-gray-200 text-gray-600 rounded-xl py-2 text-sm font-medium hover:bg-gray-50">←
+            Ubah</button>
+          <button onclick="konfirmasiSimpan()" id="btn-konfirmasi-simpan"
+            class="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-xl py-2 text-sm font-semibold">✅ Simpan
+            Jadwal</button>
         </div>
-      </div>
-      <button onclick="jalankanPreview()" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold text-sm transition-colors">Lihat Preview →</button>
-    </div>
-    <div id="generate-step-2" class="hidden flex flex-col overflow-hidden">
-      <div id="gen-ringkasan" class="p-5 border-b shrink-0 space-y-3"></div>
-      <div class="overflow-y-auto flex-1">
-        <table class="w-full text-xs">
-          <thead class="bg-gray-50 sticky top-0"><tr class="text-[10px] uppercase text-gray-400"><th class="px-4 py-2 text-left">Tanggal</th><th class="px-2 py-2">P1</th><th class="px-2 py-2 text-center">vs</th><th class="px-2 py-2 text-right">P2</th></tr></thead>
-          <tbody id="gen-tabel-jadwal" class="divide-y divide-gray-100"></tbody>
-        </table>
-      </div>
-      <div id="gen-warning-overwrite" class="hidden mx-5 mb-3 mt-2 bg-yellow-50 border border-yellow-200 rounded-xl p-3">
-        <p class="text-xs text-yellow-800 font-semibold">⚠️ Sudah ada jadwal pending di sesi ini!</p>
-        <label class="flex items-center mt-2 space-x-2 cursor-pointer">
-          <input type="checkbox" id="chk-overwrite" class="rounded" />
-          <span class="text-xs text-yellow-800 font-medium">Saya mengerti, ganti jadwal lama yang belum ada skornya</span>
-        </label>
-      </div>
-      <div class="p-4 border-t flex space-x-3 shrink-0">
-        <button onclick="kembaliKeStep1()" class="flex-1 border border-gray-200 text-gray-600 rounded-xl py-2 text-sm font-medium hover:bg-gray-50">← Ubah</button>
-        <button onclick="konfirmasiSimpan()" id="btn-konfirmasi-simpan" class="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-xl py-2 text-sm font-semibold">✅ Simpan Jadwal</button>
       </div>
     </div>
   </div>
-</div>
 
-<!-- =================== MODAL REGISTER ADMIN =================== -->
-<!-- <div id="modalRegister" class="fixed inset-0 bg-black/50 hidden z-[70] flex items-center justify-center p-4">
+  <!-- =================== MODAL REGISTER ADMIN =================== -->
+  <!-- <div id="modalRegister" class="fixed inset-0 bg-black/50 hidden z-[70] flex items-center justify-center p-4">
   <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 modal-enter">
     <div class="flex justify-between items-center mb-4">
       <h3 class="text-lg font-bold text-gray-800">➕ Daftarkan Admin Baru</h3>
@@ -442,7 +571,18 @@
   </div>
 </div> -->
 
-<!-- =================== APP SCRIPT =================== -->
-<script type="module" src="/src/main.js"></script>
+  <!-- =================== APP SCRIPT =================== -->
+  <script type="module" src="/src/main.js"></script>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SportsOrganization",
+      "name": "Liga Pingpong NIC",
+      "url": "https://pingpong-league.pages.dev",
+      "logo": "/icons/icon-512.png"
+    }
+</script>
 </body>
+
 </html>
