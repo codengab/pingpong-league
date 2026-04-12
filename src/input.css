@@ -33,10 +33,10 @@
     @apply text-[11px] uppercase font-bold tracking-wide;
   }
   .stat-nama {
-    @apply text-lg font-black mt-1.5;
+    @apply text-lg font-black mt-1;
   }
   .stat-angka {
-    @apply text-sm mt-0.5;
+    @apply text-sm mt-1;
   }
 
   /* Modal animation */
