@@ -21,6 +21,9 @@ export default defineConfig({
         background_color: '#0f172a',
         display: 'standalone',
         start_url: '/',
+        devOptions: {
+          enabled: false // 🔥 penting
+        },
 
         icons: [
           {
@@ -58,7 +61,21 @@ export default defineConfig({
       },
 
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,ico}']
+        globPatterns: ['**/*.{js,css,html,svg,ico}'],
+
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/.*supabase\.co\/rest\/v1\/.*/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'supabase-api',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 // 1 hari
+              }
+            }
+          }
+        ]
       }
     })
   ]

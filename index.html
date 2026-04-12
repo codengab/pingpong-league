@@ -12,7 +12,7 @@
   <meta property="og:description" content="Pantau klasemen dan pertandingan pingpong secara realtime." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://pingpong-league.pages.dev" />
-  <meta property="og:image" content="/assets/icons/icon-512x512.png" />
+  <meta property="og:image" content="https://pingpong-league.pages.dev/assets/icons/icon-512x512.png" />
 
   <!-- Favicon -->
   <link rel="icon" href="/assets/icons/icon-192x192.png" />
@@ -24,7 +24,7 @@
     onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0/css/all.min.css'" />
 </head>
 
-<body class="dark:bg-red-700">
+<body>
 
   <!-- =================== AUTH OVERLAY =================== -->
   <div id="auth-overlay" class="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-6 hidden">
@@ -69,7 +69,7 @@
       <div class="flex items-center gap-2">
         <span class="text-lg font-medium text-gray-800">Liga Pingpong</span>
         <!-- Realtime indicator -->
-        <span id="rt-indicator" class="hidden items-center gap-1 text-[10px] text-green-600 font-semibold">
+        <span id="rt-indicator" class="hidden lg:block items-center gap-1 text-[10px] text-green-600 font-semibold">
           <span class="w-1 h-1 rounded-full bg-green-500 live-dot"></span>LIVE
         </span>
       </div>
@@ -105,7 +105,7 @@
         </div>
       </div>
     </div>
-    <div id="infoSesi" class="text-[11px] text-gray-400 px-4 pb-1 hidden md:block text-right max-w-4xl mx-auto"></div>
+    <div id="infoSesi" class="hidden lg:block text-[11px] text-gray-400 px-4 pb-1  text-right max-w-4xl mx-auto"></div>
     <!-- Tabs -->
     <div class="max-w-4xl mx-auto px-4 flex space-x-4 overflow-x-auto hide-scroll border-t border-gray-100">
       <button onclick="showTab('klasemen')" id="btn-klasemen"
@@ -247,7 +247,7 @@
   </main>
 
   <!-- Info Poin -->
-  <div class="max-w-4xl mx-auto sm:p-2 mt-2 mb-20">
+  <div class="max-w-4xl mx-auto sm:p-2 mt-2 mb-1">
     <div class="bg-white border border-gray-100 sm:rounded-2xl p-4 shadow-sm">
       <div class="flex flex-wrap gap-4 mb-3 border-b border-gray-50 pb-3">
         <div class="flex items-center gap-2"><span
