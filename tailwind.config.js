@@ -5,7 +5,6 @@ module.exports = {
     './index.html',
     './src/**/*.{js,ts}',
   ],
-
   // Dark mode via class="dark" di <html>
   darkMode: 'class',
 
@@ -41,6 +40,10 @@ module.exports = {
     { pattern: /^grid-cols-\d$/ },
     // Width fractions
     { pattern: /^w-\[.+\]$/ },
+    'hidden', 'block',
+    'sm:block', 'sm:hidden',
+    'md:block', 'md:hidden',
+    'lg:block', 'lg:hidden',
   ],
 
   plugins: [],
