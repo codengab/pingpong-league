@@ -63,7 +63,6 @@ export function hitungKlasemen(matches) {
       p1Poin = p1Set > p2Set ? winScore : lostScore;
       p2Poin = p2Set > p1Set ? winScore : lostScore;
 
-      console.log("Pemain 1 :", p1Poin, ". Pemain 2: ", p2Poin)
       // Hitung bola dari setiap set
       for (const sStr of [s1, s2, s3, s4, s5]) {
         const s = String(sStr || "").trim();

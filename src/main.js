@@ -73,7 +73,7 @@ initDarkMode();
     sel.value = first.id;
     store.setState({ sesiAktif: first.id });
     tampilkanInfoSesi(first);
-
+    updateInfoPoin(first.id)
     // Cek isAdmin DULU sebelum loadAllData agar render pertama langsung benar
     if (session?.user) {
       store.setState({ user: session.user });
@@ -174,8 +174,10 @@ async function onSesiChange() {
   const sesiId = document.getElementById('selectSesi').value;
   const sesi   = store.getState().sesiList.find(s => String(s.id) === sesiId);
   store.setState({ sesiAktif: sesiId });
+  updateInfoPoin(sesiId)
   tampilkanInfoSesi(sesi);
   await loadAllData(sesiId);
+ 
 }
 
 function tampilkanInfoSesi(sesi) {
@@ -860,6 +862,13 @@ async function submitRegisterAdmin() {
   } finally {
     btn.disabled = false; btn.textContent = 'Daftarkan';
   }
+}
+
+function updateInfoPoin(sesiId) {
+  const isLanjut = sesiId > 2;
+  document.getElementById("label-poin-menang").textContent = isLanjut ? "+3 Poin" : "+2 Poin";
+  document.getElementById("label-poin-kalah").textContent  = isLanjut ? "0 Poin"  : "+1 Poin";
+  document.getElementById("label-poin-wo").textContent     = isLanjut ? "-1 Poin" : "0 Poin";
 }
 
 // Service Worker
