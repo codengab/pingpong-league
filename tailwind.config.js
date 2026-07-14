@@ -3,6 +3,7 @@ module.exports = {
   // Scan semua file untuk class yang dipakai
   content: [
     './index.html',
+    './tournament/index.html',
     './src/**/*.{js,ts}',
   ],
   // Dark mode via class="dark" di <html>

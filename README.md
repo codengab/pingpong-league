@@ -130,6 +130,90 @@ pingpong/
 
 ---
 
+## 🏆 Modul Turnamen (Fase Grup + Babak Gugur)
+
+Selain liga reguler ("Sesi"), aplikasi ini punya **modul terpisah** untuk turnamen tahunan
+(fase grup + babak gugur, seperti format Piala Dunia), diakses di **`/tournament/`**.
+
+### Kenapa terpisah dari liga reguler?
+- Liga reguler jalan 4x setahun lewat sistem **Sesi** (`master_sesi`, tabel `match`).
+- Turnamen adalah event berbeda (format grup+gugur, bukan round robin murni), jadi dipisah
+  ke tabel sendiri dengan prefix **`tournament_`** supaya datanya tidak tercampur dengan liga.
+- Admin yang sama (dari `admin_list`) otomatis bisa login & kelola kedua-duanya — tidak perlu akun terpisah.
+
+### Setup tambahan
+1. Setelah menjalankan `001_schema.sql`, `002_seed.sql`, `003_features.sql`, jalankan juga:
+   ```
+   supabase/migrations/004_tournament_schema.sql
+   ```
+   di Supabase SQL Editor. Ini membuat tabel `tournament_event`, `tournament_grup`,
+   `tournament_pemain`, `tournament_match`, `tournament_activity_log` — semuanya pakai RLS
+   yang reuse fungsi `is_admin()` yang sudah ada.
+2. Tidak perlu env/dependency tambahan — modul ini pakai Supabase client & auth yang sama
+   (`src/lib/supabase.js`, `src/services/authService.js`).
+3. `npm run dev` / `npm run build` otomatis meng-cover halaman turnamen juga, karena
+   `vite.config.js` sudah dikonfigurasi **multi-page**:
+   - `index.html` → halaman liga reguler (`/`)
+   - `tournament/index.html` → halaman turnamen (`/tournament/`)
+4. Link ke halaman turnamen sudah ditambahkan di header halaman utama (ikon 🏆 "Turnamen").
+
+### Struktur file baru
+```
+tournament/
+└── index.html                          ← entry point halaman turnamen (Vite multi-page)
+src/tournament/
+├── main.js                             ← tab switching, auth, event handlers
+├── lib/
+│   ├── klasemenCalculator.js           ← klasemen grup, tiebreaker, ranking runner-up, H2H
+│   └── bracketHelper.js                ← urutan ronde bracket, format tanggal
+├── services/
+│   └── tournamentService.js            ← CRUD event/grup/pemain/match + realtime + log
+└── components/
+    └── renderer.js                     ← render klasemen, jadwal, bracket, H2H, admin
+supabase/migrations/
+└── 004_tournament_schema.sql           ← skema tabel tournament_* + RLS
+```
+
+### Soal hapus data (penting!)
+- **Pemain tidak bisa di-hard-delete** dari UI — hanya bisa **dinonaktifkan** (tombol "Nonaktifkan"/"Aktifkan"
+  di tab Kelola), persis seperti pola `master_pemain` di liga reguler. Ini disengaja: karena
+  `tournament_match` menyimpan `pemain1_id`/`pemain2_id`, hard-delete akan membuat riwayat
+  pertandingan yang sudah selesai kehilangan identitas pemainnya. Pemain non-aktif tetap
+  muncul di klasemen & riwayat, tapi tidak lagi muncul di dropdown saat membuat jadwal baru.
+- **Grup bisa dihapus**, tapi ada guard: kalau grup masih punya pemain atau pertandingan
+  terkait, penghapusan akan ditolak dengan pesan jelas — pindahkan/nonaktifkan pemainnya
+  dulu, atau hapus pertandingannya lewat tab Jadwal & Hasil, baru grup kosong bisa dihapus.
+- **Pertandingan (match)** boleh di-hard-delete kapan saja (tidak ada data lain yang bergantung padanya).
+
+### Cara pakai (dipakai berulang tiap tahun)
+1. Login admin di `/tournament/` (akun sama dengan liga).
+2. Tab **Kelola** → **Turnamen (musim)** → **+ Baru**: buat event baru, mis. "Turnamen 2027".
+   Set status jadi **AKTIF** — event lama otomatis jadi arsip (biarkan statusnya **SELESAI**),
+   datanya tetap tersimpan dan bisa dilihat lagi lewat dropdown musim di header.
+3. Tab **Kelola** → tambah **Grup** (mis. Grup A, Grup B) lalu tambah **Pemain** ke tiap grup.
+4. Tab **Jadwal & Hasil** → **+ Jadwal Grup**: buat jadwal round-robin antar pemain satu grup.
+5. Setelah pertandingan main, klik **✏️ Skor** pada baris match untuk input skor per set
+   (mis. 11-7, 9-11, 11-8). Poin menang = 3, kalah = 0 — dihitung otomatis.
+6. Tab **Fase Grup** menampilkan klasemen tiap grup (tiebreaker: Poin → Selisih Set →
+   Selisih Skor → Head-to-head) plus ranking **2 terbaik (runner-up)** lintas grup.
+7. Setelah fase grup selesai, tab **Jadwal & Hasil** → **+ Jadwal Gugur**: buat pertandingan
+   babak gugur (pilih ronde: 16 Besar/Perempat Final/Semi Final/Final), pilih dua pemain yang lolos.
+8. Tab **Bracket** otomatis menampilkan bagan babak gugur lengkap dengan **skeleton 4 ronde**
+   (16 Besar → Perempat Final → Semi Final → Final — kolom yang belum diisi tampil "TBD vs TBD"),
+   **garis penghubung** antar ronde (asumsi urutan: slot ke-1&2 → slot ke-1 ronde berikutnya, dst,
+   berdasarkan field "Urutan Bracket"), dan kolom **Perebutan Peringkat 3** terpisah di ujung
+   (tanpa garis penghubung). Tanggal main ditampilkan di tiap kartu.
+   - Boleh isi salah satu pemain saja saat bikin jadwal (lawannya "TBD") kalau belum tahu siapa
+     yang lolos dari ronde sebelumnya — nanti diisi belakangan lewat tombol **✏️/Edit Pemain**.
+   - Input Skor otomatis diblokir selama masih ada slot TBD di match itu.
+   - Field "Urutan Bracket" sudah ada saran angka otomatis (angka berikutnya yang belum
+     dipakai di ronde itu), tapi tetap bisa diedit manual.
+9. Tab **Head to Head** kapan saja bisa dipakai untuk melihat rekap pertandingan dua pemain.
+10. **Tahun depan**, tinggal ulangi dari langkah 2: buat event baru, isi grup & pemain baru —
+    data turnamen tahun-tahun sebelumnya tetap aman sebagai arsip.
+
+---
+
 ## Deploy ke Cloudflare Pages
 
 1. Push ke GitHub (pastikan `env.js` dan `node_modules/` ada di `.gitignore`)

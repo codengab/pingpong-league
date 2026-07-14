@@ -1,12 +1,23 @@
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
     minify: 'esbuild',
-    cssCodeSplit: true
+    cssCodeSplit: true,
+    rollupOptions: {
+      // Multi-page: halaman liga (root) + halaman turnamen (/tournament/)
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        tournament: resolve(__dirname, 'tournament/index.html'),
+      },
+    },
   },
 
   plugins: [

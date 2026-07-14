@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="description" content="Turnamen Tenis Meja NIC — fase grup dan babak gugur, klasemen otomatis, bracket, dan head-to-head." />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <meta property="og:title" content="Turnamen Tenis Meja NIC" />
+  <meta property="og:description" content="Fase grup, bracket babak gugur, klasemen otomatis, dan head-to-head." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://pingpong-league.pages.dev/tournament/" />
+
+  <link rel="icon" href="/assets/icons/icon-192x192.png" />
+  <title>Turnamen Tenis Meja — NIC</title>
+  <link rel="stylesheet" href="/public/assets/fontawesome/css/all.min.css"
+    onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0/css/all.min.css'" />
+  <style>
+    .t-tab-active { color: #2563eb; border-bottom: 2px solid #2563eb; font-weight: 600; }
+    .t-filter-active { background: #2563eb !important; color: #fff !important; }
+  </style>
+</head>
+
+<body class="bg-gray-50">
+
+  <!-- =================== AUTH OVERLAY =================== -->
+  <div id="t-auth-overlay" class="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-6 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 relative">
+      <button onclick="tCloseAuth()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-xl">&times;</button>
+      <div class="flex justify-center mb-4">
+        <div class="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center">
+          <i class="fas fa-trophy text-blue-500 text-2xl"></i>
+        </div>
+      </div>
+      <h2 class="text-xl font-bold text-gray-800 mb-1 text-center">Login Admin Turnamen</h2>
+      <p class="text-center text-gray-400 text-xs mb-6">Pakai akun admin yang sama dengan Liga Pingpong.</p>
+      <div class="space-y-3">
+        <input id="t-auth-email" type="email" placeholder="Email admin"
+          class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+        <input id="t-auth-password" type="password" placeholder="Password" onkeydown="if(event.key==='Enter') tHandleLogin()"
+          class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+        <button onclick="tHandleLogin()" class="w-full bg-blue-600 text-white rounded-xl py-3 font-semibold text-sm hover:bg-blue-700">
+          <i class="fas fa-sign-in-alt mr-2"></i>Masuk
+        </button>
+      </div>
+      <div id="t-auth-msg" class="hidden mt-4 p-3 rounded-xl text-center text-sm bg-red-50 text-red-600"></div>
+    </div>
+  </div>
+
+  <!-- =================== HEADER =================== -->
+  <div class="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <div class="max-w-4xl mx-auto px-4 py-2 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <a href="/" class="text-gray-400 hover:text-blue-600 text-sm"><i class="fas fa-arrow-left"></i></a>
+        <span class="text-lg font-medium text-gray-800">🏆 Turnamen</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="relative">
+          <select id="t-select-event" onchange="tOnEventChange()"
+            class="appearance-none bg-gray-100 border border-gray-200 text-gray-700 py-1 px-3 pr-7 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option>Memuat...</option>
+          </select>
+        </div>
+        <button id="t-btn-login" onclick="tOpenAuth()"
+          class="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600 border border-gray-200 hover:border-blue-300 px-3 py-1 rounded-full">
+          <i class="fas fa-lock text-[10px]"></i><span class="hidden sm:inline">Admin</span>
+        </button>
+        <div id="t-admin-badge" class="hidden items-center gap-2">
+          <span class="text-[11px] text-green-600 font-semibold hidden sm:inline"><i class="fas fa-shield-alt mr-1"></i>Admin</span>
+          <button onclick="tHandleLogout()" class="text-xs text-gray-400 hover:text-red-500 border border-gray-200 hover:border-red-300 p-1 rounded-full">
+            <i class="fas fa-sign-out-alt"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Tabs -->
+    <div class="max-w-4xl mx-auto px-4 flex space-x-4 overflow-x-auto border-t border-gray-100">
+      <button onclick="tShowTab('grup')" id="t-btn-grup" class="t-tab-btn t-tab-active py-3 px-2 text-sm text-gray-500 whitespace-nowrap">Fase Grup</button>
+      <button onclick="tShowTab('jadwal')" id="t-btn-jadwal" class="t-tab-btn py-3 px-2 text-sm text-gray-500 whitespace-nowrap">Jadwal &amp; Hasil</button>
+      <button onclick="tShowTab('bracket')" id="t-btn-bracket" class="t-tab-btn py-3 px-2 text-sm text-gray-500 whitespace-nowrap">Bracket</button>
+      <button onclick="tShowTab('h2h')" id="t-btn-h2h" class="t-tab-btn py-3 px-2 text-sm text-gray-500 whitespace-nowrap">Head to Head</button>
+      <button onclick="tShowTab('kelola')" id="t-btn-kelola" class="t-tab-btn t-admin-only hidden py-3 px-2 text-sm text-gray-500 whitespace-nowrap">Kelola</button>
+    </div>
+  </div>
+
+  <!-- =================== MAIN =================== -->
+  <main class="max-w-4xl mx-auto p-3">
+
+    <div id="t-no-event" class="hidden bg-white border border-gray-100 rounded-xl p-8 text-center text-gray-400 text-sm">
+      Belum ada turnamen dibuat. Admin bisa membuat turnamen baru lewat tab <b>Kelola</b>.
+    </div>
+
+    <!-- FASE GRUP -->
+    <section id="t-tab-grup" class="t-content-section"></section>
+
+    <!-- JADWAL & HASIL -->
+    <section id="t-tab-jadwal" class="t-content-section hidden">
+      <div class="flex gap-2 mb-3">
+        <button id="t-filter-semua" onclick="tFilterJadwal('semua')" class="t-filter-btn t-filter-active text-xs px-3 py-1 rounded-full bg-gray-100">Semua</button>
+        <button id="t-filter-terjadwal" onclick="tFilterJadwal('terjadwal')" class="t-filter-btn text-xs px-3 py-1 rounded-full bg-gray-100">Mendatang</button>
+        <button id="t-filter-selesai" onclick="tFilterJadwal('selesai')" class="t-filter-btn text-xs px-3 py-1 rounded-full bg-gray-100">Hasil</button>
+        <button onclick="tOpenGroupMatchForm()" class="t-admin-only hidden ml-auto text-xs px-3 py-1 rounded-full bg-blue-600 text-white">+ Jadwal Grup</button>
+        <button onclick="tOpenKnockoutMatchForm()" class="t-admin-only hidden text-xs px-3 py-1 rounded-full bg-gray-800 text-white">+ Jadwal Gugur</button>
+      </div>
+      <div id="t-jadwal-list"></div>
+    </section>
+
+    <!-- BRACKET -->
+    <section id="t-tab-bracket" class="t-content-section hidden">
+      <div id="t-bracket-list"></div>
+    </section>
+
+    <!-- HEAD TO HEAD -->
+    <section id="t-tab-h2h" class="t-content-section hidden">
+      <div class="bg-white border border-gray-100 rounded-xl p-4">
+        <div class="flex gap-2 items-end flex-wrap">
+          <div class="flex-1 min-w-[140px]">
+            <label class="text-xs text-gray-400">Pemain A</label>
+            <select id="t-h2h-a" class="w-full border border-gray-200 rounded px-2 py-2 text-sm mt-1"></select>
+          </div>
+          <div class="flex-1 min-w-[140px]">
+            <label class="text-xs text-gray-400">Pemain B</label>
+            <select id="t-h2h-b" class="w-full border border-gray-200 rounded px-2 py-2 text-sm mt-1"></select>
+          </div>
+          <button onclick="tRunH2H()" class="bg-blue-600 text-white text-sm px-4 py-2 rounded">Bandingkan</button>
+        </div>
+        <div id="t-h2h-result" class="mt-4"></div>
+      </div>
+    </section>
+
+    <!-- ADMIN: KELOLA -->
+    <section id="t-tab-kelola" class="t-content-section t-admin-only hidden">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div class="bg-white border border-gray-100 rounded-xl p-4">
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="text-sm font-bold text-gray-800">Turnamen (musim)</h3>
+            <button onclick="tBukaEventBaru()" class="text-xs bg-blue-600 text-white px-3 py-1 rounded-full">+ Baru</button>
+          </div>
+          <div id="t-event-admin-list"></div>
+        </div>
+
+        <div class="bg-white border border-gray-100 rounded-xl p-4">
+          <h3 class="text-sm font-bold text-gray-800 mb-2">Tambah Grup</h3>
+          <input id="t-grup-nama" type="text" placeholder="Nama grup, mis. Grup A"
+            class="w-full border border-gray-200 rounded px-3 py-2 text-sm mb-2" />
+          <button onclick="tTambahGrup()" class="text-xs bg-blue-600 text-white px-3 py-2 rounded w-full">Tambah Grup</button>
+          <div id="t-grup-admin-list" class="mt-3"></div>
+        </div>
+
+        <div class="bg-white border border-gray-100 rounded-xl p-4 md:col-span-2">
+          <h3 class="text-sm font-bold text-gray-800 mb-2">Tambah Pemain</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <input id="t-pemain-nama" type="text" placeholder="Nama pemain" class="border border-gray-200 rounded px-3 py-2 text-sm" />
+            <select id="t-pemain-grup" class="border border-gray-200 rounded px-3 py-2 text-sm"></select>
+            <button onclick="tTambahPemain()" class="bg-blue-600 text-white text-sm px-3 py-2 rounded">Tambah Pemain</button>
+          </div>
+          <div id="t-pemain-admin-list" class="mt-3"></div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="text-center text-gray-400 text-xs py-8">Modul Turnamen &mdash; Liga Pingpong NIC</footer>
+
+  <!-- =================== MODAL: TURNAMEN BARU =================== -->
+  <div id="t-modal-event" class="fixed inset-0 bg-black/50 z-[90] hidden flex items-center justify-center p-6">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-sm">
+      <h3 class="font-bold text-gray-800 mb-3">Turnamen Baru</h3>
+      <label class="text-xs text-gray-400">Nama Turnamen</label>
+      <input id="t-event-nama" type="text" placeholder="Turnamen 2026 Q1" class="w-full border border-gray-200 rounded px-3 py-2 text-sm mb-2 mt-1" />
+      <label class="text-xs text-gray-400">Tahun</label>
+      <input id="t-event-tahun" type="number" value="2026" class="w-full border border-gray-200 rounded px-3 py-2 text-sm mb-2 mt-1" />
+      <div id="t-event-msg" class="text-xs text-red-500 mb-2"></div>
+      <div class="flex gap-2">
+        <button onclick="document.getElementById('t-modal-event').classList.add('hidden')" class="flex-1 border border-gray-200 rounded py-2 text-sm">Batal</button>
+        <button onclick="tSubmitEventBaru()" class="flex-1 bg-blue-600 text-white rounded py-2 text-sm">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== MODAL: JADWAL FASE GRUP =================== -->
+  <div id="t-modal-gm" class="fixed inset-0 bg-black/50 z-[90] hidden flex items-center justify-center p-6">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-sm">
+      <h3 class="font-bold text-gray-800 mb-3">Jadwal Match Fase Grup</h3>
+      <label class="text-xs text-gray-400">Grup</label>
+      <select id="t-gm-grup" class="w-full border border-gray-200 rounded px-3 py-2 text-sm mb-2 mt-1"></select>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-xs text-gray-400">Pemain 1</label>
+          <select id="t-gm-p1" class="w-full border border-gray-200 rounded px-3 py-2 text-sm mt-1"></select>
+        </div>
+        <div>
+          <label class="text-xs text-gray-400">Pemain 2</label>
+          <select id="t-gm-p2" class="w-full border border-gray-200 rounded px-3 py-2 text-sm mt-1"></select>
+        </div>
+      </div>
+      <label class="text-xs text-gray-400 block mt-2">Tanggal &amp; Waktu</label>
+      <input id="t-gm-tanggal" type="datetime-local" class="w-full border border-gray-200 rounded px-3 py-2 text-sm mt-1" />
+      <label class="text-xs text-gray-400 block mt-2">Tempat (opsional)</label>
+      <input id="t-gm-tempat" type="text" class="w-full border border-gray-200 rounded px-3 py-2 text-sm mt-1" />
+      <div id="t-gm-msg" class="text-xs text-red-500 mt-2"></div>
+      <div class="flex gap-2 mt-3">
+        <button onclick="document.getElementById('t-modal-gm').classList.add('hidden')" class="flex-1 border border-gray-200 rounded py-2 text-sm">Batal</button>
+        <button onclick="tSubmitGroupMatch()" class="flex-1 bg-blue-600 text-white rounded py-2 text-sm">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== MODAL: JADWAL BABAK GUGUR =================== -->
+  <div id="t-modal-ko" class="fixed inset-0 bg-black/50 z-[90] hidden flex items-center justify-center p-6">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-sm">
+      <h3 class="font-bold text-gray-800 mb-3">Jadwal Babak Gugur</h3>
+      <label class="text-xs text-gray-400">Ronde</label>
+      <select id="t-ko-ronde" onchange="tSuggestUrutan()" class="w-full border border-gray-200 rounded px-3 py-2 text-sm mb-2 mt-1">
+        <option>Babak 16 Besar</option>
+        <option>Perempat Final</option>
+        <option>Semi Final</option>
+        <option>Final</option>
+        <option>Perebutan Peringkat 3</option>
+      </select>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-xs text-gray-400">Pemain 1</label>
+          <select id="t-ko-p1" class="w-full border border-gray-200 rounded px-3 py-2 text-sm mt-1"></select>
+        </div>
+        <div>
+          <label class="text-xs text-gray-400">Pemain 2</label>
+          <select id="t-ko-p2" class="w-full border border-gray-200 rounded px-3 py-2 text-sm mt-1"></select>
+        </div>
+      </div>
+      <p class="text-[10px] text-gray-400 mt-1">Boleh kosongkan salah satu pemain kalau lawannya belum pasti (akan tampil "TBD" — bisa diedit lewat tombol ✏️ pada kartu bracket setelah pemenang ronde sebelumnya diketahui).</p>
+      <label class="text-xs text-gray-400 block mt-2">Urutan Bracket <span class="text-gray-300">(saran otomatis, boleh diubah)</span></label>
+      <input id="t-ko-urutan" type="number" value="1" class="w-full border border-gray-200 rounded px-3 py-2 text-sm mt-1" />
+      <label class="text-xs text-gray-400 block mt-2">Tanggal &amp; Waktu</label>
+      <input id="t-ko-tanggal" type="datetime-local" class="w-full border border-gray-200 rounded px-3 py-2 text-sm mt-1" />
+      <label class="text-xs text-gray-400 block mt-2">Tempat (opsional)</label>
+      <input id="t-ko-tempat" type="text" class="w-full border border-gray-200 rounded px-3 py-2 text-sm mt-1" />
+      <div id="t-ko-msg" class="text-xs text-red-500 mt-2"></div>
+      <div class="flex gap-2 mt-3">
+        <button onclick="document.getElementById('t-modal-ko').classList.add('hidden')" class="flex-1 border border-gray-200 rounded py-2 text-sm">Batal</button>
+        <button onclick="tSubmitKnockoutMatch()" class="flex-1 bg-gray-800 text-white rounded py-2 text-sm">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== MODAL: EDIT PEMAIN (isi slot TBD) =================== -->
+  <div id="t-modal-edit-pemain" class="fixed inset-0 bg-black/50 z-[90] hidden flex items-center justify-center p-6">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-sm">
+      <h3 class="font-bold text-gray-800 mb-3">Edit Pemain Pertandingan</h3>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-xs text-gray-400">Pemain 1</label>
+          <select id="t-edit-p1" class="w-full border border-gray-200 rounded px-3 py-2 text-sm mt-1"></select>
+        </div>
+        <div>
+          <label class="text-xs text-gray-400">Pemain 2</label>
+          <select id="t-edit-p2" class="w-full border border-gray-200 rounded px-3 py-2 text-sm mt-1"></select>
+        </div>
+      </div>
+      <p class="text-[10px] text-gray-400 mt-1">Pilih "— TBD —" untuk mengosongkan slot lagi.</p>
+      <div id="t-edit-pemain-msg" class="text-xs text-red-500 mt-2"></div>
+      <div class="flex gap-2 mt-3">
+        <button onclick="tCloseEditPemain()" class="flex-1 border border-gray-200 rounded py-2 text-sm">Batal</button>
+        <button onclick="tSubmitEditPemain()" class="flex-1 bg-blue-600 text-white rounded py-2 text-sm">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== MODAL: INPUT SKOR =================== -->
+  <div id="t-modal-skor" class="fixed inset-0 bg-black/50 z-[90] hidden flex items-center justify-center p-6">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-sm">
+      <h3 class="font-bold text-gray-800 mb-3">Input Skor</h3>
+      <div id="t-set-rows"></div>
+      <button onclick="tTambahSetRow()" class="text-xs text-blue-600 mb-2">+ Tambah Set</button>
+      <div id="t-skor-msg" class="hidden text-xs text-red-500 mb-2"></div>
+      <div class="flex gap-2 mt-2">
+        <button onclick="tCloseSkorModal()" class="flex-1 border border-gray-200 rounded py-2 text-sm">Batal</button>
+        <button onclick="tSubmitSkor()" class="flex-1 bg-blue-600 text-white rounded py-2 text-sm">Simpan Hasil</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/tournament/main.js"></script>
+</body>
+</html>
