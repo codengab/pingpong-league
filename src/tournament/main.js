@@ -51,6 +51,9 @@ Object.assign(window, {
   tOpenEditPemain,
   tCloseEditPemain,
   tSubmitEditPemain,
+  tOpenEditJadwal,
+  tCloseEditJadwal,
+  tSubmitEditJadwal,
   tRunH2H,
   tBukaEventBaru,
   tSubmitEventBaru,
@@ -72,6 +75,7 @@ const store = createStore({
 let skorSetRows = [{ p1: "", p2: "" }];
 let editingMatchId = null;
 let editingPemainMatchId = null;
+let editingJadwalMatchId = null;
 
 // ================================================================
 // INIT
@@ -540,6 +544,86 @@ function tInputSkor(matchId) {
 function tCloseSkorModal() {
   document.getElementById("t-modal-skor").classList.add("hidden");
 }
+
+// ================================================================
+// ADMIN — EDIT JADWAL (tanggal, tempat, grup/ronde — bukan skor)
+// ================================================================
+function tOpenEditJadwal(matchId) {
+  editingJadwalMatchId = matchId;
+  const { matchList, pemainList, grupList } = store.getState();
+  const m = matchList.find((x) => x.id === matchId);
+  if (!m) return;
+
+  const namaPemain = (id) => pemainList.find((p) => p.id === id)?.nama || "TBD";
+  document.getElementById("t-ej-info").textContent =
+    `${namaPemain(m.pemain1_id)} vs ${namaPemain(m.pemain2_id)}`;
+
+  const grupWrap = document.getElementById("t-ej-grup-wrap");
+  const rondeWrap = document.getElementById("t-ej-ronde-wrap");
+
+  if (m.fase === "GRUP") {
+    grupWrap.classList.remove("hidden");
+    rondeWrap.classList.add("hidden");
+    document.getElementById("t-ej-grup").innerHTML = renderSelectOptions(
+      grupList,
+      "id",
+      "nama",
+    );
+    document.getElementById("t-ej-grup").value = m.grup_id || "";
+  } else {
+    grupWrap.classList.add("hidden");
+    rondeWrap.classList.remove("hidden");
+    document.getElementById("t-ej-ronde").value = m.ronde || "";
+    document.getElementById("t-ej-urutan").value = m.urutan_bracket || 0;
+  }
+
+  // input datetime-local butuh format "YYYY-MM-DDTHH:mm" (tanpa detik & offset)
+  document.getElementById("t-ej-tanggal").value = m.tanggal
+    ? new Date(m.tanggal).toISOString().slice(0, 16)
+    : "";
+  document.getElementById("t-ej-tempat").value = m.tempat || "";
+  document.getElementById("t-ej-msg").textContent = "";
+  document.getElementById("t-modal-edit-jadwal").classList.remove("hidden");
+}
+
+function tCloseEditJadwal() {
+  document.getElementById("t-modal-edit-jadwal").classList.add("hidden");
+}
+
+async function tSubmitEditJadwal() {
+  const { matchList, eventAktif, user } = store.getState();
+  const m = matchList.find((x) => x.id === editingJadwalMatchId);
+  const msg = document.getElementById("t-ej-msg");
+  if (!m) return;
+
+  const tanggal = document.getElementById("t-ej-tanggal").value;
+  const tempat = document.getElementById("t-ej-tempat").value.trim();
+  const payload = { tanggal, tempat };
+
+  if (m.fase === "GRUP") {
+    payload.grup_id =
+      Number(document.getElementById("t-ej-grup").value) || null;
+  } else {
+    payload.ronde = document.getElementById("t-ej-ronde").value;
+    payload.urutan_bracket =
+      Number(document.getElementById("t-ej-urutan").value) || 0;
+  }
+
+  try {
+    await matchService.updateJadwal(editingJadwalMatchId, payload);
+    await logService.record(
+      user?.email,
+      "edit_jadwal_match",
+      { matchId: editingJadwalMatchId, ...payload },
+      eventAktif.id,
+    );
+    tCloseEditJadwal();
+    await loadEventData(eventAktif.id);
+  } catch (e) {
+    msg.textContent = e.message;
+  }
+}
+
 function tTambahSetRow() {
   skorSetRows.push({ p1: "", p2: "" });
   _renderSetRows();

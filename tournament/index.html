@@ -620,6 +620,79 @@
       </div>
     </div>
 
+    <!-- =================== MODAL: EDIT JADWAL =================== -->
+    <div
+      id="t-modal-edit-jadwal"
+      class="fixed inset-0 bg-black/50 z-[90] hidden flex items-center justify-center p-6"
+    >
+      <div class="bg-white rounded-2xl p-6 w-full max-w-sm">
+        <h3 class="font-bold text-gray-800 mb-1">Edit Jadwal Pertandingan</h3>
+        <div id="t-ej-info" class="text-xs text-gray-400 mb-3"></div>
+
+        <!-- khusus fase GRUP -->
+        <div id="t-ej-grup-wrap" class="hidden">
+          <label class="text-xs text-gray-400">Grup</label>
+          <select
+            id="t-ej-grup"
+            class="w-full border border-gray-200 rounded px-3 py-2 text-sm mb-2 mt-1"
+          ></select>
+        </div>
+
+        <!-- khusus fase GUGUR -->
+        <div id="t-ej-ronde-wrap" class="hidden">
+          <label class="text-xs text-gray-400">Ronde</label>
+          <select
+            id="t-ej-ronde"
+            class="w-full border border-gray-200 rounded px-3 py-2 text-sm mb-2 mt-1"
+          >
+            <option>Babak 16 Besar</option>
+            <option>Perempat Final</option>
+            <option>Semi Final</option>
+            <option>Final</option>
+            <option>Perebutan Peringkat 3</option>
+          </select>
+          <label class="text-xs text-gray-400">Urutan Bracket</label>
+          <input
+            id="t-ej-urutan"
+            type="number"
+            class="w-full border border-gray-200 rounded px-3 py-2 text-sm mb-2 mt-1"
+          />
+        </div>
+
+        <label class="text-xs text-gray-400 block mt-2"
+          >Tanggal &amp; Waktu</label
+        >
+        <input
+          id="t-ej-tanggal"
+          type="datetime-local"
+          class="w-full border border-gray-200 rounded px-3 py-2 text-sm mt-1"
+        />
+        <label class="text-xs text-gray-400 block mt-2"
+          >Tempat (opsional)</label
+        >
+        <input
+          id="t-ej-tempat"
+          type="text"
+          class="w-full border border-gray-200 rounded px-3 py-2 text-sm mt-1"
+        />
+        <div id="t-ej-msg" class="text-xs text-red-500 mt-2"></div>
+        <div class="flex gap-2 mt-3">
+          <button
+            onclick="tCloseEditJadwal()"
+            class="flex-1 border border-gray-200 rounded py-2 text-sm"
+          >
+            Batal
+          </button>
+          <button
+            onclick="tSubmitEditJadwal()"
+            class="flex-1 bg-blue-600 text-white rounded py-2 text-sm"
+          >
+            Simpan
+          </button>
+        </div>
+      </div>
+    </div>
+
     <script type="module" src="/src/tournament/main.js"></script>
   </body>
 </html>

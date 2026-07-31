@@ -156,11 +156,9 @@ export function renderJadwalHasil(
   filter,
   isAdmin,
 ) {
-  const namaPemain = (id) =>
-    pemainList.find((p) => p.id === id)?.nama || "TBD";
+  const namaPemain = (id) => pemainList.find((p) => p.id === id)?.nama || "TBD";
 
-  const namaGrup = (id) =>
-    grupList.find((g) => g.id === id)?.nama || "";
+  const namaGrup = (id) => grupList.find((g) => g.id === id)?.nama || "";
 
   let list = [...matchList];
 
@@ -518,11 +516,7 @@ export function renderJadwalHasil(
                           truncate
                         "
                       >
-                        ${
-                          m.tempat
-                            ? `📍 ${esc(m.tempat)}`
-                            : ""
-                        }
+                        ${m.tempat ? `📍 ${esc(m.tempat)}` : ""}
                       </div>
 
                       <!-- ADMIN -->
@@ -531,6 +525,13 @@ export function renderJadwalHasil(
                           ? `
                             <div class="flex items-center gap-1 ml-auto">
 
+                              <button
+                                  onclick="tOpenEditJadwal(${m.id})"
+                                  class="text-[10px] text-gray-500 hover:text-gray-700 hover:bg-gray-100 px-2 py-1 rounded-md transition"
+                                  title="Edit Jadwal"
+                                >
+                                  📅
+                              </button>
                               ${
                                 m.fase === "GUGUR"
                                   ? `
@@ -666,6 +667,7 @@ export function renderBracket(matchList, pemainList, isAdmin) {
 
     const tombolAdmin = isAdmin
       ? `
+      <button onclick="tOpenEditJadwal(${m.id})" title="Edit Jadwal" class="text-gray-400 hover:text-blue-600"><i class="fas fa-calendar text-[9px]"></i></button>
       <button onclick="tOpenEditPemain(${m.id})" title="Edit Pemain" class="text-gray-400 hover:text-blue-600"><i class="fas fa-pen text-[9px]"></i></button>
       ${
         tbdSlot
