@@ -9,6 +9,7 @@ import {
 } from "../lib/klasemenCalculator.js";
 import {
   formatTanggal,
+  formatTanggalOnly,
   buildBracketLayout,
   RONDE_JUARA3,
 } from "../lib/bracketHelper.js";
@@ -155,61 +156,472 @@ export function renderJadwalHasil(
   filter,
   isAdmin,
 ) {
-  const namaPemain = (id) => pemainList.find((p) => p.id === id)?.nama || "TBD";
-  const namaGrup = (id) => grupList.find((g) => g.id === id)?.nama || "";
+  const namaPemain = (id) =>
+    pemainList.find((p) => p.id === id)?.nama || "TBD";
+
+  const namaGrup = (id) =>
+    grupList.find((g) => g.id === id)?.nama || "";
 
   let list = [...matchList];
-  if (filter === "terjadwal")
-    list = list.filter((m) => m.status === "TERJADWAL");
-  if (filter === "selesai") list = list.filter((m) => m.status === "SELESAI");
 
-  if (!list.length) {
-    return '<div class="text-center py-12 text-gray-400 text-sm">Tidak ada pertandingan.</div>';
+  // ==========================================================
+  // FILTER
+  // ==========================================================
+  if (filter === "terjadwal") {
+    list = list.filter((m) => m.status === "TERJADWAL");
   }
 
-  return `<div class="space-y-2">${list
-    .map((m) => {
-      const sum = ringkasSet(m.set_skor);
-      const label =
-        m.fase === "GRUP"
-          ? `Fase Grup ${namaGrup(m.grup_id) ? "- " + namaGrup(m.grup_id) : ""}`
-          : m.ronde || "Babak Gugur";
-      const skorHtml =
-        m.status === "SELESAI"
-          ? `<span class="text-base font-black text-gray-800">${sum.p1Set} - ${sum.p2Set}</span>`
-          : `<span class="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-full">Terjadwal</span>`;
+  if (filter === "selesai") {
+    list = list.filter((m) => m.status === "SELESAI");
+  }
 
+  // ==========================================================
+  // EMPTY
+  // ==========================================================
+  if (!list.length) {
+    return `
+      <div class="text-center py-12 text-gray-400 text-sm">
+        Tidak ada pertandingan.
+      </div>
+    `;
+  }
+
+  // ==========================================================
+  // SORT BERDASARKAN DATETIME
+  // ==========================================================
+  list.sort((a, b) => {
+    return new Date(a.tanggal) - new Date(b.tanggal);
+  });
+
+  // ==========================================================
+  // GROUP BERDASARKAN TANGGAL SAJA
+  // tanggal = YYYY-MM-DD
+  // ==========================================================
+  const grouped = list.reduce((acc, match) => {
+    const key = (match.tanggal || "").substring(0, 10);
+
+    if (!acc[key]) {
+      acc[key] = [];
+    }
+
+    acc[key].push(match);
+
+    return acc;
+  }, {});
+
+  // ==========================================================
+  // RENDER
+  // ==========================================================
+  return Object.entries(grouped)
+    .map(([tanggal, matches]) => {
       return `
-      <div class="bg-white border border-gray-100 rounded-xl shadow-sm p-3">
-        <div class="flex items-center justify-between gap-2 flex-wrap">
-          <div class="flex-1 min-w-[200px]">
-            <div class="text-[10px] text-gray-400">${esc(label)} • ${formatTanggal(m.tanggal)}${m.tempat ? " • " + esc(m.tempat) : ""}</div>
-            <div class="flex items-center gap-2 mt-1 font-semibold text-sm text-gray-700">
-              <span>${esc(namaPemain(m.pemain1_id))}</span>
-              <span class="text-[10px] text-gray-300">vs</span>
-              <span>${esc(namaPemain(m.pemain2_id))}</span>
+        <section class="mb-8">
+
+          <!-- HEADER TANGGAL -->
+          <div class="flex items-center gap-3 mb-3">
+            <div
+              class="flex items-center gap-2
+                     text-sm font-bold text-gray-700
+                     whitespace-nowrap"
+            >
+              <span>📅</span>
+              <span>${formatTanggalOnly(tanggal)}</span>
+            </div>
+
+            <div class="h-px bg-gray-200 flex-1"></div>
+
+            <div class="text-[11px] text-gray-400 whitespace-nowrap">
+              ${matches.length} pertandingan
             </div>
           </div>
-          <div class="flex items-center gap-2">
-            ${skorHtml}
-            ${
-              isAdmin
-                ? `
-              ${m.fase === "GUGUR" ? `<button onclick="tOpenEditPemain(${m.id})" class="text-[10px] text-gray-500 hover:bg-gray-50 px-2 py-1 rounded transition-colors">👤 Pemain</button>` : ""}
-              ${
-                m.pemain1_id && m.pemain2_id
-                  ? `<button onclick="tInputSkor(${m.id})" class="text-[10px] text-blue-500 hover:bg-blue-50 px-2 py-1 rounded transition-colors">✏️ Skor</button>`
-                  : `<span class="text-[10px] text-amber-500 px-2 py-1">Menunggu TBD</span>`
-              }
-              <button onclick="tHapusMatch(${m.id})" class="text-[10px] text-red-400 hover:bg-red-50 px-2 py-1 rounded transition-colors">🗑️</button>
-            `
-                : ""
-            }
+
+          <!-- GRID -->
+          <div class="
+            grid
+            grid-cols-1
+            sm:grid-cols-1
+            lg:grid-cols-2
+            xl:grid-cols-3
+            gap-3
+          ">
+
+            ${matches
+              .map((m) => {
+                const sum = ringkasSet(m.set_skor);
+
+                // ==================================================
+                // JAM
+                // ==================================================
+                const jam = m.tanggal
+                  ? new Date(m.tanggal).toLocaleTimeString("id-ID", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : "--:--";
+
+                // ==================================================
+                // LABEL
+                // ==================================================
+                const label =
+                  m.fase === "GRUP"
+                    ? `Grup ${namaGrup(m.grup_id)}`
+                    : m.ronde || "Babak Gugur";
+
+                // ==================================================
+                // STATUS / SKOR
+                // ==================================================
+                const skorHtml =
+                  m.status === "SELESAI"
+                    ? `
+                      <div class="
+                        text-lg
+                        font-black
+                        text-gray-800
+                        tracking-wide
+                      ">
+                        ${sum.p1Set}
+                        <span class="text-gray-300 mx-1">-</span>
+                        ${sum.p2Set}
+                      </div>
+                    `
+                    : `
+                      <span class="
+                        inline-flex
+                        items-center
+                        text-[10px]
+                        font-bold
+                        text-amber-600
+                        bg-amber-50
+                        px-2.5
+                        py-1
+                        rounded-full
+                      ">
+                        Terjadwal
+                      </span>
+                    `;
+
+                // ==================================================
+                // CARD
+                // ==================================================
+                return `
+                  <div
+                    class="
+                      bg-white
+                      border
+                      border-gray-100
+                      rounded-xl
+                      shadow-sm
+                      hover:shadow-md
+                      hover:border-gray-200
+                      transition-all
+                      duration-200
+                      overflow-hidden
+                    "
+                  >
+
+                    <!-- CARD HEADER -->
+                    <div
+                      class="
+                        flex
+                        items-center
+                        justify-between
+                        px-3
+                        py-2
+                        bg-gray-50/70
+                        border-b
+                        border-gray-100
+                      "
+                    >
+
+                      <div class="flex items-center gap-2">
+
+                        <!-- JAM -->
+                        <span
+                          class="
+                            text-xs
+                            font-bold
+                            text-gray-700
+                            bg-white
+                            border
+                            border-gray-200
+                            px-2
+                            py-1
+                            rounded-md
+                          "
+                        >
+                          ${jam}
+                        </span>
+
+                        <!-- FASE -->
+                        <span
+                          class="
+                            text-[10px]
+                            font-medium
+                            text-gray-400
+                            truncate
+                          "
+                        >
+                          ${esc(label)}
+                        </span>
+
+                      </div>
+
+                      <!-- STATUS -->
+                      ${
+                        m.status === "SELESAI"
+                          ? `
+                            <span
+                              class="
+                                text-[9px]
+                                font-bold
+                                text-green-600
+                                bg-green-50
+                                px-2
+                                py-1
+                                rounded-full
+                              "
+                            >
+                              SELESAI
+                            </span>
+                          `
+                          : `
+                            <span
+                              class="
+                                text-[9px]
+                                font-bold
+                                text-amber-600
+                                bg-amber-50
+                                px-2
+                                py-1
+                                rounded-full
+                              "
+                            >
+                              LIVE
+                            </span>
+                          `
+                      }
+
+                    </div>
+
+                    <!-- PEMAIN -->
+                    <div class="px-3 py-4">
+
+                      <div
+                        class="
+                          flex
+                          items-center
+                          justify-between
+                          gap-2
+                        "
+                      >
+
+                        <!-- PEMAIN 1 -->
+                        <div class="flex-1 min-w-0 text-center">
+
+                          <div
+                            class="
+                              text-sm
+                              font-bold
+                              text-gray-800
+                              truncate
+                            "
+                            title="${esc(namaPemain(m.pemain1_id))}"
+                          >
+                            ${esc(namaPemain(m.pemain1_id))}
+                          </div>
+
+                          <div
+                            class="
+                              text-[9px]
+                              text-gray-400
+                              mt-0.5
+                            "
+                          >
+                            Pemain 1
+                          </div>
+
+                        </div>
+
+                        <!-- SKOR -->
+                        <div
+                          class="
+                            flex
+                            flex-col
+                            items-center
+                            justify-center
+                            min-w-[55px]
+                          "
+                        >
+                          ${skorHtml}
+
+                          <span
+                            class="
+                              text-[9px]
+                              text-gray-300
+                              mt-0.5
+                            "
+                          >
+                            ${m.status === "SELESAI" ? "SET" : "VS"}
+                          </span>
+                        </div>
+
+                        <!-- PEMAIN 2 -->
+                        <div class="flex-1 min-w-0 text-center">
+
+                          <div
+                            class="
+                              text-sm
+                              font-bold
+                              text-gray-800
+                              truncate
+                            "
+                            title="${esc(namaPemain(m.pemain2_id))}"
+                          >
+                            ${esc(namaPemain(m.pemain2_id))}
+                          </div>
+
+                          <div
+                            class="
+                              text-[9px]
+                              text-gray-400
+                              mt-0.5
+                            "
+                          >
+                            Pemain 2
+                          </div>
+
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                    <!-- FOOTER -->
+                    <div
+                      class="
+                        px-3
+                        py-2
+                        border-t
+                        border-gray-100
+                        flex
+                        items-center
+                        justify-between
+                        min-h-[38px]
+                      "
+                    >
+
+                      <!-- TEMPAT -->
+                      <div
+                        class="
+                          text-[10px]
+                          text-gray-400
+                          truncate
+                        "
+                      >
+                        ${
+                          m.tempat
+                            ? `📍 ${esc(m.tempat)}`
+                            : ""
+                        }
+                      </div>
+
+                      <!-- ADMIN -->
+                      ${
+                        isAdmin
+                          ? `
+                            <div class="flex items-center gap-1 ml-auto">
+
+                              ${
+                                m.fase === "GUGUR"
+                                  ? `
+                                    <button
+                                      onclick="tOpenEditPemain(${m.id})"
+                                      class="
+                                        text-[10px]
+                                        text-gray-500
+                                        hover:text-gray-700
+                                        hover:bg-gray-100
+                                        px-2
+                                        py-1
+                                        rounded-md
+                                        transition
+                                      "
+                                      title="Edit Pemain"
+                                    >
+                                      👤
+                                    </button>
+                                  `
+                                  : ""
+                              }
+
+                              ${
+                                m.pemain1_id && m.pemain2_id
+                                  ? `
+                                    <button
+                                      onclick="tInputSkor(${m.id})"
+                                      class="
+                                        text-[10px]
+                                        text-blue-500
+                                        hover:text-blue-700
+                                        hover:bg-blue-50
+                                        px-2
+                                        py-1
+                                        rounded-md
+                                        transition
+                                      "
+                                      title="Input Skor"
+                                    >
+                                      ✏️
+                                    </button>
+                                  `
+                                  : `
+                                    <span
+                                      class="
+                                        text-[10px]
+                                        text-amber-500
+                                        px-2
+                                      "
+                                    >
+                                      Menunggu TBD
+                                    </span>
+                                  `
+                              }
+
+                              <button
+                                onclick="tHapusMatch(${m.id})"
+                                class="
+                                  text-[10px]
+                                  text-red-400
+                                  hover:text-red-600
+                                  hover:bg-red-50
+                                  px-2
+                                  py-1
+                                  rounded-md
+                                  transition
+                                "
+                                title="Hapus Pertandingan"
+                              >
+                                🗑️
+                              </button>
+
+                            </div>
+                          `
+                          : ""
+                      }
+
+                    </div>
+
+                  </div>
+                `;
+              })
+              .join("")}
+
           </div>
-        </div>
-      </div>`;
+
+        </section>
+      `;
     })
-    .join("")}</div>`;
+    .join("");
 }
 
 // ============================================================

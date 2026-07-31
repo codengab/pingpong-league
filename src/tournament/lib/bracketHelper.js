@@ -53,7 +53,12 @@ export function formatTanggal(dateStr) {
   if (isNaN(d)) return "TBD";
   return `${HARI[d.getDay()]}, ${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
-
+export function formatTanggalOnly(dateStr) {
+  if (!dateStr) return "TBD";
+  const d = new Date(dateStr);
+  if (isNaN(d)) return "TBD";
+  return `${HARI[d.getDay()]}, ${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}`;
+}
 // ============================================================
 // LAYOUT BRACKET — skeleton otomatis + posisi kartu + connector
 // Pendekatan "asumsi urutan": pasangan slot ke-(2k) & ke-(2k+1) di
