@@ -19,6 +19,7 @@ import {
   renderGrupAdminList,
   renderPemainAdminList,
   renderSelectOptions,
+  renderRiwayatPemain,
 } from "./components/renderer.js";
 import { headToHead } from "./lib/klasemenCalculator.js";
 import { createStore } from "../lib/appState.js";
@@ -58,6 +59,8 @@ Object.assign(window, {
   tBukaEventBaru,
   tSubmitEventBaru,
   tUbahStatusEvent,
+  tLihatPemain,
+  tClosePemainModal,
 });
 
 const store = createStore({
@@ -706,6 +709,19 @@ function tRunH2H() {
     namaB,
     hasil,
   );
+}
+
+function tLihatPemain(pemainId) {
+  const { pemainList, matchList, grupList } = store.getState();
+  const p = pemainList.find((x) => x.id === pemainId);
+  if (!p) return;
+  document.getElementById("t-pemain-modal-title").textContent = p.nama;
+  document.getElementById("t-pemain-modal-body").innerHTML =
+    renderRiwayatPemain(pemainId, pemainList, matchList, grupList);
+  document.getElementById("t-modal-pemain").classList.remove("hidden");
+}
+function tClosePemainModal() {
+  document.getElementById("t-modal-pemain").classList.add("hidden");
 }
 
 init();

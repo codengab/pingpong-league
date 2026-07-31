@@ -75,9 +75,9 @@ export function renderFaseGrup(grupList, pemainList, matchList) {
               ${rows
                 .map(
                   (r, i) => `
-                <tr class="${i === 0 ? "bg-green-50" : i === 1 ? "bg-blue-50/50" : ""}">
+                <tr onclick="tLihatPemain(${r.pemain.id})" class="${i === 0 ? "bg-green-50" : i === 1 ? "bg-blue-50/50" : ""}">
                   <td class="py-2 px-1 text-center font-bold ${i < 2 ? "text-blue-600" : "text-gray-400"}">${i + 1}</td>
-                  <td class="py-2 px-1 font-medium text-gray-700">${esc(r.pemain.nama)}</td>
+                  <td class="py-2 px-1 font-medium text-gray-700 cursor-pointer hover:text-blue-600 underline" >${esc(r.pemain.nama)}</td>
                   <td class="py-2 px-1 text-center text-gray-500">${r.main}</td>
                   <td class="py-2 px-1 text-center text-gray-500">${r.menang}</td>
                   <td class="py-2 px-1 text-center text-gray-500">${r.kalah}</td>
@@ -813,4 +813,72 @@ export function renderSelectOptions(items, valueKey, labelKey) {
       (it) => `<option value="${it[valueKey]}">${esc(it[labelKey])}</option>`,
     )
     .join("");
+}
+
+// ============================================================
+// MODAL RIWAYAT PEMAIN — daftar jadwal & hasil satu pemain
+// ============================================================
+export function renderRiwayatPemain(pemainId, pemainList, matchList, grupList) {
+  const namaPemain = (id) => pemainList.find((p) => p.id === id)?.nama || "TBD";
+  const namaGrup = (id) => grupList.find((g) => g.id === id)?.nama || "";
+
+  const matches = matchList
+    .filter((m) => m.pemain1_id === pemainId || m.pemain2_id === pemainId)
+    .sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
+
+  if (!matches.length) {
+    return '<div class="text-center py-8 text-gray-400 text-sm">Belum ada jadwal/hasil untuk pemain ini.</div>';
+  }
+
+  const menangCount = matches.filter(
+    (m) => m.status === "SELESAI" && m.pemenang_id === pemainId,
+  ).length;
+  const kalahCount = matches.filter(
+    (m) =>
+      m.status === "SELESAI" && m.pemenang_id && m.pemenang_id !== pemainId,
+  ).length;
+
+  const stats = `
+    <div class="flex items-center gap-4 mb-3 text-xs text-gray-500">
+      <span>Total: <b class="text-gray-700">${matches.length}</b></span>
+      <span class="text-green-600">Menang: <b>${menangCount}</b></span>
+      <span class="text-red-500">Kalah: <b>${kalahCount}</b></span>
+    </div>`;
+
+  const rows = matches
+    .map((m) => {
+      const lawanId = m.pemain1_id === pemainId ? m.pemain2_id : m.pemain1_id;
+      const sum = ringkasSet(m.set_skor);
+      const menang = m.status === "SELESAI" && m.pemenang_id === pemainId;
+      const skorTampil =
+        m.pemain1_id === pemainId
+          ? `${sum.p1Set}-${sum.p2Set}`
+          : `${sum.p2Set}-${sum.p1Set}`;
+      const labelFase =
+        m.fase === "GRUP" ? esc(namaGrup(m.grup_id)) : esc(m.ronde || "");
+
+      return `
+        <div class="py-2.5 flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <div class="text-xs font-medium text-gray-700 truncate">
+              vs ${lawanId ? esc(namaPemain(lawanId)) : '<span class="text-gray-300 italic">TBD</span>'}
+              <span class="text-[10px] text-gray-400 font-normal">${labelFase}</span>
+            </div>
+            <div class="text-[10px] text-gray-400 mt-0.5">
+              ${formatTanggal(m.tanggal)}${m.tempat ? " · 📍 " + esc(m.tempat) : ""}
+            </div>
+          </div>
+          <div class="text-right shrink-0">
+            ${
+              m.status === "SELESAI"
+                ? `<span class="text-xs font-bold ${menang ? "text-green-600" : "text-red-500"}">${menang ? "Menang" : "Kalah"}</span>
+                   <div class="text-[10px] text-gray-400">${skorTampil}</div>`
+                : `<span class="text-[10px] text-amber-500">Terjadwal</span>`
+            }
+          </div>
+        </div>`;
+    })
+    .join("");
+
+  return stats + `<div class="divide-y divide-gray-100">${rows}</div>`;
 }

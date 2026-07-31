@@ -692,6 +692,26 @@
         </div>
       </div>
     </div>
+    <!-- =================== MODAL: Riwayat Pemain =================== -->
+    <div
+      id="t-modal-pemain"
+      class="fixed inset-0 bg-black/50 z-[90] hidden flex items-center justify-center p-6"
+    >
+      <div
+        class="bg-white rounded-2xl p-6 w-full max-w-sm max-h-[80vh] flex flex-col"
+      >
+        <div class="flex items-center justify-between mb-3">
+          <h3 id="t-pemain-modal-title" class="font-bold text-gray-800"></h3>
+          <button
+            onclick="tClosePemainModal()"
+            class="text-gray-400 hover:text-gray-600 text-lg leading-none"
+          >
+            ✕
+          </button>
+        </div>
+        <div id="t-pemain-modal-body" class="overflow-y-auto flex-1"></div>
+      </div>
+    </div>
 
     <script type="module" src="/src/tournament/main.js"></script>
   </body>
