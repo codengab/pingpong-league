@@ -2,6 +2,7 @@
 // Entry point modul Turnamen — pola sama dengan src/main.js (liga reguler)
 
 import { authService } from "../services/authService.js";
+import { registerSW } from 'virtual:pwa-register';
 import {
   eventService,
   grupService,
@@ -724,4 +725,6 @@ function tClosePemainModal() {
   document.getElementById("t-modal-pemain").classList.add("hidden");
 }
 
+
+registerSW({ immediate: true });
 init();
