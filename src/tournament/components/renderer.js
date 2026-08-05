@@ -211,17 +211,21 @@ export function renderJadwalHasil(
   // RENDER
   // ==========================================================
   return Object.entries(grouped)
-    .map(([tanggal, matches]) => {
+    .map(([tanggal, matches], idx) => {
       return `
         <section class="mb-8">
 
           <!-- HEADER TANGGAL -->
-          <div class="flex items-center gap-3 mb-3">
+          <div class="flex items-center gap-3 mb-3 cursor-pointer select-none" onclick="tToggleJadwalSection(${idx})">
             <div
               class="flex items-center gap-2
                      text-sm font-bold text-gray-700
                      whitespace-nowrap"
             >
+              <i
+              id="t-jadwal-chevron-${idx}"
+              class="fas ${idx === 0 ? "fa-chevron-down" : "fa-chevron-right"} text-[10px] text-gray-400 transition-transform"
+            ></i>
               <span>📅</span>
               <span>${formatTanggalOnly(tanggal)}</span>
             </div>
@@ -234,7 +238,9 @@ export function renderJadwalHasil(
           </div>
 
           <!-- GRID -->
-          <div class="
+           <div
+            id="t-jadwal-section-${idx}"
+            class="${idx == 0 ? "" : "hidden"}
             grid
             grid-cols-1
             sm:grid-cols-1

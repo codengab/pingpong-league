@@ -2,7 +2,7 @@
 // Entry point modul Turnamen — pola sama dengan src/main.js (liga reguler)
 
 import { authService } from "../services/authService.js";
-import { registerSW } from 'virtual:pwa-register';
+import { registerSW } from "virtual:pwa-register";
 import {
   eventService,
   grupService,
@@ -44,6 +44,7 @@ Object.assign(window, {
   tSubmitKnockoutMatch,
   tSuggestUrutan,
   tFilterJadwal,
+  tToggleJadwalSection,
   tInputSkor,
   tCloseSkorModal,
   tTambahSetRow,
@@ -73,7 +74,7 @@ const store = createStore({
   pemainList: [],
   matchList: [],
   activeTab: "grup",
-  jadwalFilter: "semua",
+  jadwalFilter: "terjadwal",
 });
 
 let skorSetRows = [{ p1: "", p2: "" }];
@@ -251,6 +252,17 @@ function tFilterJadwal(filter) {
     .getElementById("t-filter-" + filter)
     ?.classList.add("t-filter-active");
   _renderAll();
+}
+
+function tToggleJadwalSection(idx) {
+  const body = document.getElementById(`t-jadwal-section-${idx}`);
+  const chevron = document.getElementById(`t-jadwal-chevron-${idx}`);
+  if (!body) return;
+  body.classList.toggle("hidden");
+  if (chevron) {
+    chevron.classList.toggle("fa-chevron-down");
+    chevron.classList.toggle("fa-chevron-right");
+  }
 }
 
 // ================================================================
@@ -724,7 +736,6 @@ function tLihatPemain(pemainId) {
 function tClosePemainModal() {
   document.getElementById("t-modal-pemain").classList.add("hidden");
 }
-
 
 registerSW({ immediate: true });
 init();
