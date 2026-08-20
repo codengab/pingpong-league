@@ -63,6 +63,9 @@ Object.assign(window, {
   tUbahStatusEvent,
   tLihatPemain,
   tClosePemainModal,
+  tOpenWO,
+  tCloseWO,
+  tSubmitWO,
 });
 
 const store = createStore({
@@ -81,6 +84,7 @@ let skorSetRows = [{ p1: "", p2: "" }];
 let editingMatchId = null;
 let editingPemainMatchId = null;
 let editingJadwalMatchId = null;
+let editingWOMatchId = null;
 
 // ================================================================
 // INIT
@@ -737,5 +741,56 @@ function tClosePemainModal() {
   document.getElementById("t-modal-pemain").classList.add("hidden");
 }
 
+function tOpenWO(matchId) {
+  editingWOMatchId = matchId;
+  const { matchList, pemainList } = store.getState();
+  const m = matchList.find((x) => x.id === matchId);
+  if (!m) return;
+
+  const namaPemain = (id) => pemainList.find((p) => p.id === id)?.nama || "TBD";
+  document.getElementById("t-wo-info").textContent =
+    `${namaPemain(m.pemain1_id)} vs ${namaPemain(m.pemain2_id)}`;
+
+  const select = document.getElementById("t-wo-pemenang");
+  select.innerHTML = `
+    <option value="${m.pemain1_id}">${namaPemain(m.pemain1_id)}</option>
+    <option value="${m.pemain2_id}">${namaPemain(m.pemain2_id)}</option>
+    <option value="">— Double WO (kedua pemain WO) —</option>
+  `;
+
+  document.getElementById("t-wo-alasan").value = "";
+  document.getElementById("t-wo-msg").textContent = "";
+  document.getElementById("t-modal-wo").classList.remove("hidden");
+}
+async function tSubmitWO() {
+  const { eventAktif, user } = store.getState();
+  const msg = document.getElementById("t-wo-msg");
+  const rawValue = document.getElementById("t-wo-pemenang").value;
+  const pemenangId = rawValue ? Number(rawValue) : null; // '' = Double WO
+  const alasan = document.getElementById("t-wo-alasan").value.trim();
+
+  try {
+    await matchService.saveWalkover(
+      editingWOMatchId,
+      pemenangId,
+      alasan,
+      user?.email,
+    );
+    await logService.record(
+      user?.email,
+      "tandai_wo",
+      { matchId: editingWOMatchId, pemenangId, alasan },
+      eventAktif.id,
+    );
+    tCloseWO();
+    await loadEventData(eventAktif.id);
+  } catch (e) {
+    msg.textContent = e.message;
+  }
+}
+
+function tCloseWO() {
+  document.getElementById("t-modal-wo").classList.add("hidden");
+}
 registerSW({ immediate: true });
 init();

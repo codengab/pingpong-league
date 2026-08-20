@@ -186,9 +186,12 @@ export function renderJadwalHasil(
 
   // ==========================================================
   // SORT BERDASARKAN DATETIME
+  // - filter "selesai" (Hasil)   -> descending (terbaru duluan)
+  // - filter "terjadwal"/"semua" -> ascending  (terdekat duluan)
   // ==========================================================
   list.sort((a, b) => {
-    return new Date(a.tanggal) - new Date(b.tanggal);
+    const diff = new Date(a.tanggal) - new Date(b.tanggal);
+    return filter === "selesai" ? -diff : diff;
   });
 
   // ==========================================================
@@ -274,32 +277,22 @@ export function renderJadwalHasil(
                 // ==================================================
                 // STATUS / SKOR
                 // ==================================================
-                const skorHtml =
-                  m.status === "SELESAI"
+                const skorHtml = m.is_wo
+                  ? `
+                    <span class="inline-flex items-center text-[10px] font-bold text-red-600 bg-red-50 px-2.5 py-1 rounded-full">
+                      WO
+                    </span>
+                  `
+                  : m.status === "SELESAI"
                     ? `
-                      <div class="
-                        text-lg
-                        font-black
-                        text-gray-800
-                        tracking-wide
-                      ">
+                      <div class="text-lg font-black text-gray-800 tracking-wide">
                         ${sum.p1Set}
                         <span class="text-gray-300 mx-1">-</span>
                         ${sum.p2Set}
                       </div>
                     `
                     : `
-                      <span class="
-                        inline-flex
-                        items-center
-                        text-[10px]
-                        font-bold
-                        text-amber-600
-                        bg-amber-50
-                        px-2.5
-                        py-1
-                        rounded-full
-                      ">
+                      <span class="inline-flex items-center text-[10px] font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full">
                         Terjadwal
                       </span>
                     `;
@@ -370,40 +363,15 @@ export function renderJadwalHasil(
 
                       </div>
 
+                    
                       <!-- STATUS -->
-                      ${
-                        m.status === "SELESAI"
-                          ? `
-                            <span
-                              class="
-                                text-[9px]
-                                font-bold
-                                text-green-600
-                                bg-green-50
-                                px-2
-                                py-1
-                                rounded-full
-                              "
-                            >
-                              SELESAI
-                            </span>
-                          `
-                          : `
-                            <span
-                              class="
-                                text-[9px]
-                                font-bold
-                                text-amber-600
-                                bg-amber-50
-                                px-2
-                                py-1
-                                rounded-full
-                              "
-                            >
-                              LIVE
-                            </span>
-                          `
-                      }
+                        ${
+                          m.is_wo
+                            ? `<span class="text-[9px] font-bold text-red-600 bg-red-50 px-2 py-1 rounded-full" title="${m.wo_alasan ? esc(m.wo_alasan) : "Walkover"}">WO</span>`
+                            : m.status === "SELESAI"
+                              ? `<span class="text-[9px] font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">SELESAI</span>`
+                              : `<span class="text-[9px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-full">LIVE</span>`
+                        }
 
                     </div>
 
@@ -566,29 +534,27 @@ export function renderJadwalHasil(
                                   ? `
                                     <button
                                       onclick="tInputSkor(${m.id})"
-                                      class="
-                                        text-[10px]
-                                        text-blue-500
-                                        hover:text-blue-700
-                                        hover:bg-blue-50
-                                        px-2
-                                        py-1
-                                        rounded-md
-                                        transition
-                                      "
+                                      class="text-[10px] text-blue-500 hover:text-blue-700 hover:bg-blue-50 px-2 py-1 rounded-md transition"
                                       title="Input Skor"
                                     >
                                       ✏️
                                     </button>
+                                    ${
+                                      m.status !== "SELESAI"
+                                        ? `
+                                          <button
+                                            onclick="tOpenWO(${m.id})"
+                                            class="text-[10px] text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded-md transition"
+                                            title="Tandai WO (Walkover)"
+                                          >
+                                            🚩
+                                          </button>
+                                        `
+                                        : ""
+                                    }
                                   `
                                   : `
-                                    <span
-                                      class="
-                                        text-[10px]
-                                        text-amber-500
-                                        px-2
-                                      "
-                                    >
+                                    <span class="text-[10px] text-amber-500 px-2">
                                       Menunggu TBD
                                     </span>
                                   `
@@ -667,9 +633,9 @@ export function renderBracket(matchList, pemainList, isAdmin) {
 
     const baris = (pid, skor) => `
       <div class="flex justify-between items-center px-2 py-1 ${w && w === pid ? "text-green-600 font-bold" : "text-gray-700"}">
-        <span class="truncate">${pid ? esc(namaPemain(pid)) : '<span class="text-gray-300 italic">TBD</span>'}</span>
-        <span>${m.status === "SELESAI" ? skor : ""}</span>
-      </div>`;
+        <span class="truncate ${pid ? "cursor-pointer hover:underline" : ""}" ${pid ? `onclick="tLihatPemain(${pid})"` : ""}>${pid ? esc(namaPemain(pid)) : '<span class="text-gray-300 italic">TBD</span>'}</span>
+        <span>${m.status === "SELESAI" ? (m.is_wo ? "" : skor) : ""}</span>
+        </div>`;
 
     const tombolAdmin = isAdmin
       ? `
@@ -678,7 +644,14 @@ export function renderBracket(matchList, pemainList, isAdmin) {
       ${
         tbdSlot
           ? `<span class="text-[9px] text-amber-500" title="Lengkapi pemain dulu">TBD</span>`
-          : `<button onclick="tInputSkor(${m.id})" title="Input Skor" class="text-gray-400 hover:text-blue-600"><i class="fas fa-clipboard-list text-[9px]"></i></button>`
+          : `
+            <button onclick="tInputSkor(${m.id})" title="Input Skor" class="text-gray-400 hover:text-blue-600"><i class="fas fa-clipboard-list text-[9px]"></i></button>
+            ${
+              m.status !== "SELESAI"
+                ? `<button onclick="tOpenWO(${m.id})" title="Tandai WO" class="text-gray-400 hover:text-red-600"><i class="fas fa-flag text-[9px]"></i></button>`
+                : ""
+            }
+          `
       }
     `
       : "";
@@ -689,7 +662,7 @@ export function renderBracket(matchList, pemainList, isAdmin) {
         ${baris(m.pemain1_id, sum.p1Set)}
         <div class="border-t border-gray-50">${baris(m.pemain2_id, sum.p2Set)}</div>
         <div class="flex justify-between items-center px-2 py-1 mt-0 border-t border-dashed border-gray-100 bg-gray-50/50">
-          <span class="text-[9px] text-gray-400">${formatTanggal(m.tanggal)}</span>
+          <span class="text-[9px] ${m.is_wo ? "text-red-500 font-bold" : "text-gray-400"}">${m.is_wo ? "WO" : formatTanggal(m.tanggal)}</span>
           <span class="flex gap-1.5">${tombolAdmin}</span>
         </div>
       </div>`;
@@ -877,8 +850,8 @@ export function renderRiwayatPemain(pemainId, pemainList, matchList, grupList) {
           <div class="text-right shrink-0">
             ${
               m.status === "SELESAI"
-                ? `<span class="text-xs font-bold ${menang ? "text-green-600" : "text-red-500"}">${menang ? "Menang" : "Kalah"}</span>
-                   <div class="text-[10px] text-gray-400">${skorTampil}</div>`
+                ? `<span class="text-xs font-bold ${menang ? "text-green-600" : "text-red-500"}">${menang ? "Menang" : "Kalah"}${m.is_wo ? " (WO)" : ""}</span>
+                  <div class="text-[10px] text-gray-400">${m.is_wo ? "—" : skorTampil}</div>`
                 : `<span class="text-[10px] text-amber-500">Terjadwal</span>`
             }
           </div>

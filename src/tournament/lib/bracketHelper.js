@@ -68,10 +68,10 @@ export function formatTanggalOnly(dateStr) {
 // ============================================================
 const CARD_W = 208;
 const CARD_H = 76;
-const GAP0 = 20; // jarak antar kartu di ronde paling awal
-const COL_GAP = 56; // jarak horizontal antar kolom ronde
+const GAP0 = 10; // jarak antar kartu di ronde paling awal
+const COL_GAP = 40; // jarak horizontal antar kolom ronde
 const LEFT_MARGIN = 16;
-const TOP_MARGIN = 32;
+const TOP_MARGIN = 16;
 const UNIT = CARD_H + GAP0;
 
 export function buildBracketLayout(gugurMatches) {
@@ -119,12 +119,29 @@ export function buildBracketLayout(gugurMatches) {
     );
     const slotCount = Math.max(slotCountStandar, maxUrutanReal, 1);
 
-    const slots = [];
-    for (let i = 0; i < slotCount; i++) {
-      const match = realList[i] || null;
-      const centerY = TOP_MARGIN + (i + 0.5) * UNIT * Math.pow(2, r);
-      slots.push({ match, isSkeleton: !match, urutanSaran: i + 1, centerY });
+    // Tempatkan match berdasarkan NILAI urutan_bracket (bukan index array),
+    // supaya match dengan urutan_bracket=3 selalu jatuh di slot ke-3 walau
+    // slot 1 & 2 masih TBD/kosong. Match tanpa urutan_bracket valid (0/bentrok)
+    // baru diisi belakangan ke slot kosong yang tersisa.
+    const slotMatches = new Array(slotCount).fill(null);
+    const sisa = [];
+    realList.forEach((m) => {
+      const u = m.urutan_bracket || 0;
+      if (u >= 1 && u <= slotCount && !slotMatches[u - 1]) {
+        slotMatches[u - 1] = m;
+      } else {
+        sisa.push(m);
+      }
+    });
+    let sisaIdx = 0;
+    for (let i = 0; i < slotCount && sisaIdx < sisa.length; i++) {
+      if (!slotMatches[i]) slotMatches[i] = sisa[sisaIdx++];
     }
+
+    const slots = slotMatches.map((match, i) => {
+      const centerY = TOP_MARGIN + (i + 0.5) * UNIT * Math.pow(2, r);
+      return { match, isSkeleton: !match, urutanSaran: i + 1, centerY };
+    });
     const colX = LEFT_MARGIN + r * (CARD_W + COL_GAP);
     const centerYCol =
       slots.reduce((s, sl) => s + sl.centerY, 0) / slots.length;

@@ -246,6 +246,43 @@ export const matchService = {
     if (error) throw error;
   },
 
+  async saveWalkover(matchId, pemenangId, alasan, adminEmail) {
+    const { data: match, error: getErr } = await supabase
+      .from(TABLE)
+      .select("pemain1_id, pemain2_id")
+      .eq("id", matchId)
+      .single();
+    if (getErr) throw getErr;
+    if (!match.pemain1_id || !match.pemain2_id) {
+      throw new Error(
+        "Lengkapi kedua pemain dulu (masih ada slot TBD) sebelum menandai WO.",
+      );
+    }
+    // pemenangId boleh kosong (null) khusus untuk Double WO
+    if (
+      pemenangId &&
+      pemenangId !== match.pemain1_id &&
+      pemenangId !== match.pemain2_id
+    ) {
+      throw new Error(
+        "Pemenang harus salah satu dari kedua pemain di match ini, atau pilih Double WO.",
+      );
+    }
+
+    const { error } = await supabase
+      .from(TABLE)
+      .update({
+        set_skor: [],
+        status: "SELESAI",
+        pemenang_id: pemenangId || null,
+        is_wo: true,
+        wo_alasan: alasan || null,
+        updated_by: adminEmail || null,
+      })
+      .eq("id", matchId);
+    if (error) throw error;
+  },
+
   /** Kembalikan match ke status terjadwal (reset skor) */
   async resetScore(matchId) {
     const { error } = await supabase
@@ -332,14 +369,12 @@ export const matchService = {
 // ── ACTIVITY LOG ──
 export const logService = {
   async record(adminEmail, action, detail, eventId) {
-    const { error } = await supabase
-      .from("tournament_activity_log")
-      .insert({
-        admin_email: adminEmail,
-        action,
-        detail: detail || null,
-        event_id: eventId || null,
-      });
+    const { error } = await supabase.from("tournament_activity_log").insert({
+      admin_email: adminEmail,
+      action,
+      detail: detail || null,
+      event_id: eventId || null,
+    });
     if (error) console.error("[tournament_activity_log]", error.message);
   },
 

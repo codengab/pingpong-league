@@ -3,7 +3,10 @@
 
 /** Ringkas 1 match: berapa set & poin(skor) tiap pemain */
 export function ringkasSet(setSkor) {
-  let p1Set = 0, p2Set = 0, p1Poin = 0, p2Poin = 0;
+  let p1Set = 0,
+    p2Set = 0,
+    p1Poin = 0,
+    p2Poin = 0;
   (setSkor || []).forEach((s) => {
     const a = Number(s.p1) || 0;
     const b = Number(s.p2) || 0;
@@ -33,13 +36,18 @@ export function hitungKlasemenGrup(pemainList, matchList) {
   pemainList.forEach((p) => {
     table[p.id] = {
       pemain: p,
-      main: 0, menang: 0, kalah: 0,
-      setM: 0, setK: 0, skorM: 0, skorK: 0,
+      main: 0,
+      menang: 0,
+      kalah: 0,
+      setM: 0,
+      setK: 0,
+      skorM: 0,
+      skorK: 0,
       poin: 0,
     };
   });
 
-  const selesai = matchList.filter((m) => m.status === 'SELESAI');
+  const selesai = matchList.filter((m) => m.status === "SELESAI");
 
   selesai.forEach((m) => {
     const r1 = table[m.pemain1_id];
@@ -49,14 +57,30 @@ export function hitungKlasemenGrup(pemainList, matchList) {
     const sum = ringkasSet(m.set_skor);
     const pemenangId = m.pemenang_id || tentukanPemenang(m);
 
-    r1.main++; r2.main++;
-    r1.setM += sum.p1Set; r1.setK += sum.p2Set;
-    r2.setM += sum.p2Set; r2.setK += sum.p1Set;
-    r1.skorM += sum.p1Poin; r1.skorK += sum.p2Poin;
-    r2.skorM += sum.p2Poin; r2.skorK += sum.p1Poin;
+    r1.main++;
+    r2.main++;
+    r1.setM += sum.p1Set;
+    r1.setK += sum.p2Set;
+    r2.setM += sum.p2Set;
+    r2.setK += sum.p1Set;
+    r1.skorM += sum.p1Poin;
+    r1.skorK += sum.p2Poin;
+    r2.skorM += sum.p2Poin;
+    r2.skorK += sum.p1Poin;
 
-    if (pemenangId === m.pemain1_id) { r1.menang++; r1.poin += 3; r2.kalah++; }
-    else if (pemenangId === m.pemain2_id) { r2.menang++; r2.poin += 3; r1.kalah++; }
+    if (pemenangId === m.pemain1_id) {
+      r1.menang++;
+      r1.poin += m.is_wo ? 2 : 3;
+      r2.kalah++;
+    } else if (pemenangId === m.pemain2_id) {
+      r2.menang++;
+      r2.poin += m.is_wo ? 2 : 3;
+      r1.kalah++;
+    } else if (m.is_wo) {
+      // Double WO — tidak ada pemenang, keduanya dihitung kalah (0 poin)
+      r1.kalah++;
+      r2.kalah++;
+    }
   });
 
   const rows = Object.values(table).map((r) => ({
@@ -67,7 +91,9 @@ export function hitungKlasemenGrup(pemainList, matchList) {
 
   function h2h(idA, idB) {
     const m = selesai.find(
-      (x) => (x.pemain1_id === idA && x.pemain2_id === idB) || (x.pemain1_id === idB && x.pemain2_id === idA)
+      (x) =>
+        (x.pemain1_id === idA && x.pemain2_id === idB) ||
+        (x.pemain1_id === idB && x.pemain2_id === idA),
     );
     if (!m) return 0;
     const w = m.pemenang_id || tentukanPemenang(m);
@@ -111,12 +137,14 @@ export function rankingRunnerUp(standingsPerGrup, posisi = [2]) {
 /** Rekap head-to-head dua pemain dari seluruh match (grup + gugur) dalam satu event */
 export function headToHead(pemainAId, pemainBId, allMatches) {
   const riwayat = allMatches.filter(
-    (m) => m.status === 'SELESAI' &&
+    (m) =>
+      m.status === "SELESAI" &&
       ((m.pemain1_id === pemainAId && m.pemain2_id === pemainBId) ||
-       (m.pemain1_id === pemainBId && m.pemain2_id === pemainAId))
+        (m.pemain1_id === pemainBId && m.pemain2_id === pemainAId)),
   );
 
-  let aMenang = 0, bMenang = 0;
+  let aMenang = 0,
+    bMenang = 0;
   const detail = riwayat.map((m) => {
     const sum = ringkasSet(m.set_skor);
     const pemenangId = m.pemenang_id || tentukanPemenang(m);
